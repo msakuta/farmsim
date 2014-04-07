@@ -43,6 +43,10 @@ window.onload = function() {
 			groundSprite.mouseover = function(id){
 				statusCursor = {x:x, y:y};
 			}
+			groundSprite.tap = function(id){
+				id.target.mousedown(id);
+				id.target.mouseover(id);
+			}
 			ground.addChild(groundSprite);
 			cell.gs = groundSprite;
 		}
@@ -97,6 +101,7 @@ window.onload = function() {
 		// Interactivity initialization
 		this.interactive = true;
 		this.click = clickEvent;
+		this.tap = clickEvent;
 		this.hitArea = new PIXI.Rectangle(0, 0, 100, 40);
 
 		// Button background graphics, partially transparent to show things behind
