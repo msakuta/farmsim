@@ -5,9 +5,12 @@
 	<meta charset="UTF-8" />
 	<script type="text/javascript" src="xorshift.js"></script>
 	<script type="text/javascript" src="pixi.dev.js"></script>
+	<script type="text/javascript" src="FarmGame.js"></script>
 	<script type="text/javascript">
 var width;
 var height;
+
+var game;
 
 window.onload = function() {
 	width = 640;
@@ -18,9 +21,7 @@ window.onload = function() {
 
 	var stage = new PIXI.Stage;
 
-	var rng = new Xor128();
-
-	var cells = [[]];
+	game = new FarmGame(width / 32, height / 32);
 
 	var groundTexture = PIXI.Texture.fromImage("assets/dirt.png");
 	var ridgeTexture = PIXI.Texture.fromImage("assets/ridge.png");
@@ -32,11 +33,10 @@ window.onload = function() {
 	var grassThresholds = [
 		0.25, 0.50, 0.75
 	];
-	for(var x = 0; x < width / 32; x++){
-		var row = [];
-		for(var y = 0; y < height / 32; y++){
-			var groundSprite = new PIXI.Sprite(groundTexture);
 
+	game.onUpdateCell = function(cell,x,y){
+		if(cell.gs == undefined){
+			var groundSprite = new PIXI.Sprite(groundTexture);
 			groundSprite.position.x = x * 32;
 			groundSprite.position.y = y * 32;
 			groundSprite.interactive = true;
@@ -44,55 +44,31 @@ window.onload = function() {
 				id.target.setTexture(ridgeTexture);
 			};
 			stage.addChild(groundSprite);
-
-			var grass = rng.next();
-			var cell = {gs: groundSprite, grass: grass, grassSprite: null};
-			for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
-				if(grass < grassThresholds[grassIndex])
-					break;
-			}
-			if(0 < grassIndex){
+			cell.gs = groundSprite;
+		}
+		for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
+			if(cell.grass < grassThresholds[grassIndex])
+				break;
+		}
+		if(0 < grassIndex){
+			if(cell.grassSprite == undefined){
 				var grassSprite = new PIXI.Sprite(grassTextures[grassIndex - 1]);
 
-				grassSprite.position.x = x * 32;
-				grassSprite.position.y = y * 32;
+				grassSprite.position = cell.gs.position;
 				stage.addChild(grassSprite);
 				cell.grassSprite = grassSprite;
 			}
-			row.push(cell);
+			else
+				cell.grassSprite.setTexture(grassTextures[grassIndex - 1]);
 		}
-		cells.push(row);
 	}
+
+	game.init();
 
 	requestAnimationFrame(animate);
 
 	function animate() {
-		var growth = 0.0001;
-
-		for(var x = 0; x < cells.length; x++){
-			for(var y = 0; y < cells[x].length; y++){
-				var cell = cells[x][y];
-				for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
-					if(cell.grass + growth < grassThresholds[grassIndex])
-						break;
-				}
-				if(0 < grassIndex){
-					if(cell.grassSprite == null){
-						var grassSprite = new PIXI.Sprite(grassTextures[grassIndex - 1]);
-
-						grassSprite.position = cell.gs.position;
-						stage.addChild(grassSprite);
-						cell.grassSprite = grassSprite;
-					}
-					else
-						cell.grassSprite.setTexture(grassTextures[grassIndex - 1]);
-				}
-				if(cell.grass < 1. - growth)
-					cell.grass += growth;
-				else
-					cell.grass = 1.;
-			}
-		}
+		game.update();
 
 		renderer.render(stage);
 
