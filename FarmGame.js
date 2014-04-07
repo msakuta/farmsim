@@ -5,6 +5,15 @@ function FarmGame(xs,ys){
 	this.rng = new Xor128();
 
 	this.cells = [];
+
+	this.Cell = function(grass){
+		this.grass = grass;
+		this.cultivated = false;
+	}
+	this.Cell.prototype.cultivate = function(){
+		this.grass = 0;
+		this.cultivated = true;
+	}
 }
 
 FarmGame.prototype.init = function(){
@@ -12,7 +21,7 @@ FarmGame.prototype.init = function(){
 		var row = [];
 		for(var y = 0; y < this.ys; y++){
 			var grass = this.rng.next();
-			var cell = {grass: grass, cultivated: false};
+			var cell = new this.Cell(grass);
 
 			this.onUpdateCell(cell,x,y);
 

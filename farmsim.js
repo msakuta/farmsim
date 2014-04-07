@@ -36,7 +36,7 @@ window.onload = function() {
 			groundSprite.interactive = true;
 			groundSprite.mousedown = function(id){
 				id.target.setTexture(ridgeTexture);
-				cell.cultivated = true;
+				cell.cultivate();
 			};
 			groundSprite.mouseover = function(id){
 				statusCursor = {x:x, y:y};
@@ -58,6 +58,10 @@ window.onload = function() {
 			}
 			else
 				cell.grassSprite.setTexture(grassTextures[grassIndex - 1]);
+		}
+		else if(cell.grassSprite != undefined){
+			ground.removeChild(cell.grassSprite);
+			cell.grassSprite = undefined;
 		}
 	}
 
