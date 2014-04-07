@@ -35,8 +35,10 @@ window.onload = function() {
 			groundSprite.position.y = y * 32;
 			groundSprite.interactive = true;
 			groundSprite.mousedown = function(id){
-				id.target.setTexture(ridgeTexture);
-				cell.cultivate();
+				if(clickMode == 0){
+					id.target.setTexture(ridgeTexture);
+					cell.cultivate();
+				}
 			};
 			groundSprite.mouseover = function(id){
 				statusCursor = {x:x, y:y};
@@ -71,6 +73,8 @@ window.onload = function() {
 	var cursorSprite = new PIXI.Sprite(cursorTexture);
 	stage.addChild(cursorSprite);
 
+	var overlay = new PIXI.DisplayObjectContainer();
+
 	var statusCursor = {x: 0, y: 0};
 	var statusPanel = new PIXI.DisplayObjectContainer();
 	var statusPanelFrame = new PIXI.Graphics();
@@ -84,8 +88,76 @@ window.onload = function() {
 	statusPanel.addChild(statusText);
 	statusPanel.x = 10;
 	statusPanel.y = 10;
-	stage.addChild(statusPanel);
+	overlay.addChild(statusPanel);
 
+	/// Internal Button class.
+	function Button(iconImage, caption, clickEvent, active){
+		PIXI.DisplayObjectContainer.apply(this, arguments);
+
+		// Interactivity initialization
+		this.interactive = true;
+		this.click = clickEvent;
+		this.hitArea = new PIXI.Rectangle(0, 0, 100, 40);
+
+		// Button background graphics, partially transparent to show things behind
+		var filler = new PIXI.Graphics();
+		filler.beginFill(0x000000, 0.5);
+		filler.lineStyle(1, 0x7f7f7f, 1);
+		filler.drawRect(0, 0, 100, 40);
+		this.addChild(filler);
+
+		// Button frame graphics that can be hidden if inactive
+		this.frame = new PIXI.Graphics();
+		this.frame.lineStyle(2, 0xffffff, 1);
+		this.frame.drawRect(0, 0, 100, 40);
+		this.addChild(this.frame);
+
+		// Allocate icon image if specified
+		if(iconImage){
+			var icon = new PIXI.Sprite(PIXI.Texture.fromImage(iconImage));
+			icon.x = 4;
+			icon.y = 4;
+			this.addChild(icon);
+		}
+
+		// Button caption text
+		this.text = null;
+		if(caption){
+			this.text = new PIXI.Text(caption, {font: "15px Helvetica", fill: "#ffffff"});
+			this.text.x = 40;
+			this.text.y = 12;
+			this.addChild(this.text);
+		}
+		this.setActive(active);
+	}
+	Button.prototype = new PIXI.DisplayObjectContainer;
+
+	Button.prototype.setActive = function(active){
+		this.frame.visible = active;
+		if(this.text)
+			this.text.setStyle({font: "15px Helvetica", fill: active ? "#ffffff" : "#afafaf"});
+	}
+
+	var clickMode = 0;
+	var cultivateButton = new Button("assets/cultivate.png", "Cultivate", function(id){
+		clickMode = 0;
+		cultivateButton.setActive(true);
+		seedButton.setActive(false);
+	}, true);
+	cultivateButton.x = width - 120;
+	cultivateButton.y = 10;
+	overlay.addChild(cultivateButton);
+
+	var seedButton = new Button("assets/seed.png", "Seed", function(id){
+		clickMode = 1;
+		cultivateButton.setActive(false);
+		seedButton.setActive(true);
+	}, false);
+	seedButton.x = width - 120;
+	seedButton.y = 60;
+	overlay.addChild(seedButton);
+
+	stage.addChild(overlay);
 	requestAnimationFrame(animate);
 
 	function animate() {
