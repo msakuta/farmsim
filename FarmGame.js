@@ -12,7 +12,7 @@ FarmGame.prototype.init = function(){
 		var row = [];
 		for(var y = 0; y < this.ys; y++){
 			var grass = this.rng.next();
-			var cell = {grass: grass};
+			var cell = {grass: grass, cultivated: false};
 
 			this.onUpdateCell(cell,x,y);
 

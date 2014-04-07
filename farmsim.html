@@ -34,6 +34,9 @@ window.onload = function() {
 		0.25, 0.50, 0.75
 	];
 
+	var ground = new PIXI.DisplayObjectContainer();
+	stage.addChild(ground);
+
 	game.onUpdateCell = function(cell,x,y){
 		if(cell.gs == undefined){
 			var groundSprite = new PIXI.Sprite(groundTexture);
@@ -42,8 +45,12 @@ window.onload = function() {
 			groundSprite.interactive = true;
 			groundSprite.mousedown = function(id){
 				id.target.setTexture(ridgeTexture);
+				cell.cultivated = true;
 			};
-			stage.addChild(groundSprite);
+			groundSprite.mouseover = function(id){
+				statusCursor = {x:x, y:y};
+			}
+			ground.addChild(groundSprite);
 			cell.gs = groundSprite;
 		}
 		for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
@@ -55,7 +62,7 @@ window.onload = function() {
 				var grassSprite = new PIXI.Sprite(grassTextures[grassIndex - 1]);
 
 				grassSprite.position = cell.gs.position;
-				stage.addChild(grassSprite);
+				ground.addChild(grassSprite);
 				cell.grassSprite = grassSprite;
 			}
 			else
@@ -65,10 +72,37 @@ window.onload = function() {
 
 	game.init();
 
+	var cursorTexture = new PIXI.Texture.fromImage("assets/cursor.png");
+	var cursorSprite = new PIXI.Sprite(cursorTexture);
+	stage.addChild(cursorSprite);
+
+	var statusCursor = {x: 0, y: 0};
+	var statusPanel = new PIXI.DisplayObjectContainer();
+	var statusPanelFrame = new PIXI.Graphics();
+	statusPanelFrame.beginFill(0x000000, 0.5);
+	statusPanelFrame.lineStyle(2, 0xffffff, 1);
+	statusPanelFrame.drawRect(0, 0, 120, 45);
+	statusPanel.addChild(statusPanelFrame);
+	var statusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
+	statusText.y = 5;
+	statusText.x = 5;
+	statusPanel.addChild(statusText);
+	statusPanel.x = 10;
+	statusPanel.y = 10;
+	stage.addChild(statusPanel);
+
 	requestAnimationFrame(animate);
 
 	function animate() {
 		game.update();
+
+		var statusCell = game.cells[statusCursor.x][statusCursor.y];
+		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
+			+ "Grass: " + Math.floor(100 * statusCell.grass) + "\n"
+			+ "Cultivated: " + (statusCell.cultivated ? "Yes" : "No"));
+		
+		cursorSprite.x = statusCursor.x * 32;
+		cursorSprite.y = statusCursor.y * 32;
 
 		renderer.render(stage);
 
