@@ -6,18 +6,26 @@ function FarmGame(xs,ys){
 
 	this.cells = [];
 
+	this.workingPower = 100;
+
 	this.Cell = function(grass){
 		this.grass = grass;
 		this.cultivated = false;
 		this.corn = 0;
 	}
 	this.Cell.prototype.cultivate = function(){
+		var ret = !this.cultivated || this.grass != 0;
 		this.grass = 0;
 		this.cultivated = true;
+		return ret;
 	}
 	this.Cell.prototype.seed = function(){
-		if(this.cultivated && this.corn < 1)
+		if(this.cultivated && this.corn < 1){
 			this.corn = 1;
+			return true;
+		}
+		else
+			return false;
 	}
 }
 
@@ -69,4 +77,33 @@ FarmGame.prototype.update = function(){
 		}
 	}
 
+	if(this.workingPower + 0.1 < 100)
+		this.workingPower += 0.1;
+	else
+		this.workingPower = 100;
+
+}
+
+FarmGame.prototype.cultivate = function(cell){
+	var workCost = 20; // Cultivation costs high
+	if(this.workingPower < workCost)
+		return false; // Give up due to low working power
+	if(cell.cultivate()){
+		this.workingPower -= workCost;
+		return true;
+	}
+	else
+		return false;
+}
+
+FarmGame.prototype.seed = function(cell){
+	var workCost = 10; // Seeding is not a hard physical task.
+	if(this.workingPower < workCost)
+		return false; // Give up due to low working power
+	if(cell.seed()){
+		this.workingPower -= workCost;
+		return true;
+	}
+	else
+		return false;
 }

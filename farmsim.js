@@ -46,11 +46,11 @@ window.onload = function() {
 			groundSprite.interactive = true;
 			groundSprite.mousedown = function(id){
 				if(clickMode == 0){
-					id.target.setTexture(ridgeTexture);
-					cell.cultivate();
+					if(game.cultivate(cell))
+						id.target.setTexture(ridgeTexture);
 				}
 				else{
-					cell.seed();
+					game.seed(cell);
 				}
 			};
 			groundSprite.mouseover = function(id){
@@ -111,6 +111,7 @@ window.onload = function() {
 
 	var overlay = new PIXI.DisplayObjectContainer();
 
+	// The status panel shows information about a cell under the cursor.
 	var statusCursor = {x: 0, y: 0};
 	var statusPanel = new PIXI.DisplayObjectContainer();
 	var statusPanelFrame = new PIXI.Graphics();
@@ -125,6 +126,33 @@ window.onload = function() {
 	statusPanel.x = 10;
 	statusPanel.y = 10;
 	overlay.addChild(statusPanel);
+
+	// The global status panel shows information about the player and other global things.
+	var gstatusPanel = new PIXI.DisplayObjectContainer();
+	var gstatusPanelFrame = new PIXI.Graphics();
+	gstatusPanelFrame.beginFill(0x000000, 0.5);
+	gstatusPanelFrame.lineStyle(2, 0xffffff, 1);
+	gstatusPanelFrame.drawRect(0, 0, 120, 35);
+	gstatusPanel.addChild(gstatusPanelFrame);
+	var gstatusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
+	gstatusText.y = 5;
+	gstatusText.x = 5;
+	gstatusPanel.addChild(gstatusText);
+	var gstatusWPBarBack = new PIXI.Graphics();
+	gstatusWPBarBack.beginFill(0xff0000, 1.0);
+	gstatusWPBarBack.drawRect(0, 0, 100, 3);
+	gstatusWPBarBack.x = 10;
+	gstatusWPBarBack.y = 20;
+	gstatusPanel.addChild(gstatusWPBarBack);
+	var gstatusWPBar = new PIXI.Graphics();
+	gstatusWPBar.beginFill(0x00ff00, 1.0);
+	gstatusWPBar.drawRect(0, 0, 100, 3);
+	gstatusWPBar.x = 10;
+	gstatusWPBar.y = 20;
+	gstatusPanel.addChild(gstatusWPBar);
+	gstatusPanel.x = 10;
+	gstatusPanel.y = height - 45;
+	overlay.addChild(gstatusPanel);
 
 	/// Internal Button class.
 	function Button(iconImage, caption, clickEvent, active){
@@ -205,9 +233,12 @@ window.onload = function() {
 			+ "Grass: " + Math.floor(100 * statusCell.grass) + "\n"
 			+ "Cultivated: " + (statusCell.cultivated ? "Yes" : "No") + "\n"
 			+ "Corn growth: " + Math.floor(statusCell.corn * 100));
-		
+
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;
+
+		gstatusText.setText("Working Power: " + Math.floor(game.workingPower));
+		gstatusWPBar.scale.x = game.workingPower / 100;
 
 		renderer.render(stage);
 
