@@ -1,17 +1,22 @@
 var width;
 var height;
-
+var stage;
+var renderer;
 var game;
 
-window.onload = function() {
+window.onload = function(){
 	width = 640;
 	height = 480;
-	var renderer = PIXI.autoDetectRenderer(width, height);
+	renderer = PIXI.autoDetectRenderer(width, height);
 
 	document.getElementById("stage").appendChild(renderer.view);
 
-	var stage = new PIXI.Stage;
+	stage = new PIXI.Stage;
 
+	init();
+}
+
+function init(){
 	game = new FarmGame(width / 32, height / 32);
 
 	var groundTexture = PIXI.Texture.fromImage("assets/dirt.png");
@@ -102,6 +107,10 @@ window.onload = function() {
 			ground.removeChild(cell.cornSprite);
 			cell.cornSprite = undefined;
 		}
+	}
+
+	game.onAutoSave = function(str){
+		document.getElementById('autoSaveText').value = str;
 	}
 
 	game.init();
@@ -257,5 +266,18 @@ window.onload = function() {
 		renderer.render(stage);
 
 		requestAnimationFrame(animate);
+	}
+}
+
+function reset(){
+	if(confirm("Are you sure to reset progress?")){
+		localStorage.removeItem("FarmGameSave");
+
+		// We want to use clearAll(), but PIXI.Stage does not officially support it.
+		// At least we want removeChildAt() or something...
+		while(stage.children.length != 0)
+			stage.removeChild(stage.getChildAt(0));
+
+		init();
 	}
 }

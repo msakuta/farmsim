@@ -7,11 +7,26 @@ function FarmGame(xs,ys){
 	this.cells = [];
 
 	this.workingPower = 100;
+	this.time = 0;
+	this.autosave_time = 0;
 
 	this.Cell = function(grass){
 		this.grass = grass;
 		this.cultivated = false;
 		this.corn = 0;
+	}
+	this.Cell.prototype.serialize = function(){
+		var v = this;
+		return {
+			grass: this.grass,
+			cultivated: this.cultivated,
+			corn: this.corn,
+		};
+	}
+	this.Cell.prototype.deserialize = function(data){
+		this.grass = data.grass;
+		this.cultivated = data.cultivated;
+		this.corn = data.corn;
 	}
 	this.Cell.prototype.cultivate = function(){
 		var ret = !this.cultivated || this.grass != 0;
@@ -30,17 +45,22 @@ function FarmGame(xs,ys){
 }
 
 FarmGame.prototype.init = function(){
-	for(var x = 0; x < this.xs; x++){
-		var row = [];
-		for(var y = 0; y < this.ys; y++){
-			var grass = this.rng.next();
-			var cell = new this.Cell(grass);
+	if(typeof(Storage) !== "undefined"){
+		this.deserialize(localStorage.getItem("FarmGameSave"));
+	}
+	else{
+		for(var x = 0; x < this.xs; x++){
+			var row = [];
+			for(var y = 0; y < this.ys; y++){
+				var grass = this.rng.next();
+				var cell = new this.Cell(grass);
 
-			this.onUpdateCell(cell,x,y);
+				this.onUpdateCell(cell,x,y);
 
-			row.push(cell);
+				row.push(cell);
+			}
+			this.cells.push(row);
 		}
-		this.cells.push(row);
 	}
 }
 
@@ -82,6 +102,72 @@ FarmGame.prototype.update = function(){
 	else
 		this.workingPower = 100;
 
+	this.time++;
+
+	if(this.autosave_time + 100 < this.time){
+
+		// Check for localStorage
+		if(typeof(Storage) !== "undefined"){
+			var serialData = this.serialize();
+			localStorage.setItem("FarmGameSave", serialData);
+			this.onAutoSave(serialData);
+		}
+
+		this.autosave_time += 100;
+	}
+}
+
+FarmGame.prototype.serialize = function(){
+	var saveData = {workingPower: this.workingPower, xs: this.xs, ys: this.ys};
+	var cells = [];
+	for(var x = 0; x < this.cells.length; x++){
+		var row = [];
+		for(var y = 0; y < this.cells[x].length; y++){
+			var v = this.cells[x][y];
+			row.push(v.serialize());
+		}
+		cells.push(row);
+	}
+	saveData.cells = cells;
+	return JSON.stringify(saveData);
+}
+
+FarmGame.prototype.deserialize = function(stream){
+	var data = JSON.parse(stream);
+	if(data != null){
+		this.workingPower = data.workingPower;
+		this.xs = data.xs;
+		this.ys = data.ys;
+		this.cells = [];
+		var cells = data.cells;
+		for(var x = 0; x < cells.length; x++){
+			var row = [];
+			for(var y = 0; y < cells[x].length; y++){
+				var c = cells[x][y];
+				if(!c)
+					continue;
+				var cell = new this.Cell(c.grass);
+				cell.deserialize(c);
+				row.push(cell);
+				this.onUpdateCell(cell,x,y);
+			}
+			this.cells.push(row);
+		}
+	}
+	else{
+		for(var x = 0; x < this.xs; x++){
+			var row = [];
+			for(var y = 0; y < this.ys; y++){
+				var grass = this.rng.next();
+				var cell = new this.Cell(grass);
+
+				this.onUpdateCell(cell,x,y);
+
+				row.push(cell);
+			}
+			this.cells.push(row);
+		}
+	}
 }
 
 FarmGame.prototype.cultivate = function(cell){
@@ -106,4 +192,7 @@ FarmGame.prototype.seed = function(cell){
 	}
 	else
 		return false;
+}
+
+FarmGame.prototype.onAutoSave = function(str){
 }
