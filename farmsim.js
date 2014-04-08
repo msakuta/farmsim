@@ -52,10 +52,7 @@ function init(){
 			groundSprite.mousedown = function(id){
 				switch(clickMode){
 					case 0: break;
-					case 1:
-						if(game.cultivate(cell))
-							id.target.setTexture(ridgeTexture);
-						break;
+					case 1: game.cultivate(cell); break;
 					case 2: game.seed(cell); break;
 				}
 			};
@@ -69,6 +66,9 @@ function init(){
 			ground.addChild(groundSprite);
 			cell.gs = groundSprite;
 		}
+
+		cell.gs.setTexture(cell.cultivated ? ridgeTexture : groundTexture);
+
 		for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
 			if(cell.grass < grassThresholds[grassIndex])
 				break;
