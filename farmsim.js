@@ -24,6 +24,16 @@ window.onload = function() {
 	var grassThresholds = [
 		0.25, 0.50, 0.75
 	];
+	var cornTextures = [
+		PIXI.Texture.fromImage("assets/corn0.png"),
+		PIXI.Texture.fromImage("assets/corn1.png"),
+		PIXI.Texture.fromImage("assets/corn2.png"),
+		PIXI.Texture.fromImage("assets/corn3.png"),
+		PIXI.Texture.fromImage("assets/corn4.png"),
+	];
+	var cornThresholds = [
+		1.0, 1.25, 1.50, 1.75, 2.0
+	];
 
 	var ground = new PIXI.DisplayObjectContainer();
 	stage.addChild(ground);
@@ -38,6 +48,9 @@ window.onload = function() {
 				if(clickMode == 0){
 					id.target.setTexture(ridgeTexture);
 					cell.cultivate();
+				}
+				else{
+					cell.seed();
 				}
 			};
 			groundSprite.mouseover = function(id){
@@ -68,6 +81,25 @@ window.onload = function() {
 		else if(cell.grassSprite != undefined){
 			ground.removeChild(cell.grassSprite);
 			cell.grassSprite = undefined;
+		}
+		for(var cornIndex = 0; cornIndex < cornTextures.length; cornIndex++){
+			if(cell.corn < cornThresholds[cornIndex])
+				break;
+		}
+		if(0 < cornIndex){
+			if(cell.cornSprite == undefined){
+				var cornSprite = new PIXI.Sprite(cornTextures[cornIndex - 1]);
+
+				cornSprite.position = cell.gs.position;
+				ground.addChild(cornSprite);
+				cell.cornSprite = cornSprite;
+			}
+			else
+				cell.cornSprite.setTexture(cornTextures[cornIndex - 1]);
+		}
+		else if(cell.cornSprite != undefined){
+			ground.removeChild(cell.cornSprite);
+			cell.cornSprite = undefined;
 		}
 	}
 

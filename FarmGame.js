@@ -9,10 +9,15 @@ function FarmGame(xs,ys){
 	this.Cell = function(grass){
 		this.grass = grass;
 		this.cultivated = false;
+		this.corn = 0;
 	}
 	this.Cell.prototype.cultivate = function(){
 		this.grass = 0;
 		this.cultivated = true;
+	}
+	this.Cell.prototype.seed = function(){
+		if(this.cultivated && this.corn < 1)
+			this.corn = 1;
 	}
 }
 
@@ -55,6 +60,10 @@ FarmGame.prototype.update = function(){
 				cell.grass += growth;
 			else
 				cell.grass = 1.;
+
+			// Increase corn growth.  Lower growth if there are weeds.
+			if(0 < cell.corn)
+				cell.corn += 0.0005 * (1. - cell.grass);
 
 			game.onUpdateCell(cell,x,y);
 		}
