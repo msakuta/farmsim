@@ -116,7 +116,7 @@ window.onload = function() {
 	var statusPanelFrame = new PIXI.Graphics();
 	statusPanelFrame.beginFill(0x000000, 0.5);
 	statusPanelFrame.lineStyle(2, 0xffffff, 1);
-	statusPanelFrame.drawRect(0, 0, 120, 45);
+	statusPanelFrame.drawRect(0, 0, 120, 65);
 	statusPanel.addChild(statusPanelFrame);
 	var statusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	statusText.y = 5;
@@ -203,7 +203,8 @@ window.onload = function() {
 		var statusCell = game.cells[statusCursor.x][statusCursor.y];
 		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
 			+ "Grass: " + Math.floor(100 * statusCell.grass) + "\n"
-			+ "Cultivated: " + (statusCell.cultivated ? "Yes" : "No"));
+			+ "Cultivated: " + (statusCell.cultivated ? "Yes" : "No") + "\n"
+			+ "Corn growth: " + Math.floor(statusCell.corn * 100));
 		
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;
