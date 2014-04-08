@@ -45,12 +45,13 @@ window.onload = function() {
 			groundSprite.position.y = y * 32;
 			groundSprite.interactive = true;
 			groundSprite.mousedown = function(id){
-				if(clickMode == 0){
-					if(game.cultivate(cell))
-						id.target.setTexture(ridgeTexture);
-				}
-				else{
-					game.seed(cell);
+				switch(clickMode){
+					case 0: break;
+					case 1:
+						if(game.cultivate(cell))
+							id.target.setTexture(ridgeTexture);
+						break;
+					case 2: game.seed(cell); break;
 				}
 			};
 			groundSprite.mouseover = function(id){
@@ -154,15 +155,25 @@ window.onload = function() {
 	gstatusPanel.y = height - 45;
 	overlay.addChild(gstatusPanel);
 
+	var buttons = [];
+
 	/// Internal Button class.
 	function Button(iconImage, caption, clickEvent, active){
 		PIXI.DisplayObjectContainer.apply(this, arguments);
 
 		// Interactivity initialization
 		this.interactive = true;
-		this.click = clickEvent;
-		this.tap = clickEvent;
+		this.click = function(id){
+			clickEvent(id);
+			// Update activation state for mode select buttons
+			for(var i = 0; i < buttons.length; i++)
+				buttons[i].setActive(buttons[i] == this);
+		}
+		this.tap = this.click;
 		this.hitArea = new PIXI.Rectangle(0, 0, 100, 40);
+
+		// Append this object to a list of buttons for click event processing
+		buttons.push(this);
 
 		// Button background graphics, partially transparent to show things behind
 		var filler = new PIXI.Graphics();
@@ -204,22 +215,25 @@ window.onload = function() {
 	}
 
 	var clickMode = 0;
-	var cultivateButton = new Button("assets/cultivate.png", "Cultivate", function(id){
+	var selectButton = new Button("assets/cursor.png", "Select", function(id){
 		clickMode = 0;
-		cultivateButton.setActive(true);
-		seedButton.setActive(false);
 	}, true);
+	selectButton.x = width - 120;
+	selectButton.y = 10;
+	overlay.addChild(selectButton);
+
+	var cultivateButton = new Button("assets/cultivate.png", "Cultivate", function(id){
+		clickMode = 1;
+	}, false);
 	cultivateButton.x = width - 120;
-	cultivateButton.y = 10;
+	cultivateButton.y = 60;
 	overlay.addChild(cultivateButton);
 
 	var seedButton = new Button("assets/seed.png", "Seed", function(id){
-		clickMode = 1;
-		cultivateButton.setActive(false);
-		seedButton.setActive(true);
+		clickMode = 2;
 	}, false);
 	seedButton.x = width - 120;
-	seedButton.y = 60;
+	seedButton.y = 110;
 	overlay.addChild(seedButton);
 
 	stage.addChild(overlay);
