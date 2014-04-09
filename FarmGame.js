@@ -180,6 +180,9 @@ FarmGame.prototype.deserialize = function(stream){
 	}
 }
 
+FarmGame.prototype.select = function(cell){return true;}
+FarmGame.prototype.select.description = function(){return "Selects a cell to inspect";}
+
 FarmGame.prototype.cultivate = function(cell){
 	var workCost = 20; // Cultivation costs high
 	if(this.workingPower < workCost)
@@ -191,6 +194,7 @@ FarmGame.prototype.cultivate = function(cell){
 	else
 		return false;
 }
+FarmGame.prototype.cultivate.description = function(){return "Cultivate and make ridges\nWorking Power Cost: 20";}
 
 FarmGame.prototype.seed = function(cell){
 	var workCost = 10; // Seeding is not a hard physical task.
@@ -205,6 +209,7 @@ FarmGame.prototype.seed = function(cell){
 	else
 		return false;
 }
+FarmGame.prototype.seed.description = function(){return "Apply crop seeds\nWorking Power Cost: 10\nMoney cost: 1";}
 
 FarmGame.prototype.harvest = function(cell){
 	var workCost = 15; // Harvesting is a bit hard physical task.
@@ -218,6 +223,7 @@ FarmGame.prototype.harvest = function(cell){
 	else
 		return false;
 }
+FarmGame.prototype.harvest.description = function(){return "Harvest and sell crops\nto gain money\nWorking Power Cost: 15";}
 
 FarmGame.prototype.onAutoSave = function(str){
 }

@@ -50,12 +50,7 @@ function init(){
 			groundSprite.position.y = y * 32;
 			groundSprite.interactive = true;
 			groundSprite.mousedown = function(id){
-				switch(clickMode){
-					case 0: break;
-					case 1: game.cultivate(cell); break;
-					case 2: game.seed(cell); break;
-					case 3: game.harvest(cell); break;
-				}
+				clickCallback.call(game, cell);
 			};
 			groundSprite.mouseover = function(id){
 				statusCursor = {x:x, y:y};
@@ -178,6 +173,21 @@ function init(){
 	gstatusPanel.y = height - 65;
 	overlay.addChild(gstatusPanel);
 
+	var buttonTip = new PIXI.DisplayObjectContainer();
+	var buttonTipFiller = new PIXI.Graphics();
+	buttonTipFiller.beginFill(0x000000, 0.5);
+	buttonTipFiller.lineStyle(2, 0xffffff, 1);
+	buttonTipFiller.drawRect(0, 0, 150, 50);
+	buttonTip.addChild(buttonTipFiller);
+	var buttonTipWorkingPowerText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
+	buttonTipWorkingPowerText.x = 5;
+	buttonTipWorkingPowerText.y = 5;
+	buttonTip.addChild(buttonTipWorkingPowerText);
+	buttonTip.x = width - 280;
+	buttonTip.y = 10;
+	buttonTip.visible = false;
+	overlay.addChild(buttonTip);
+
 	var buttons = [];
 
 	/// Internal Button class.
@@ -187,12 +197,19 @@ function init(){
 		// Interactivity initialization
 		this.interactive = true;
 		this.click = function(id){
-			clickEvent(id);
+			clickCallback = clickEvent;
 			// Update activation state for mode select buttons
 			for(var i = 0; i < buttons.length; i++)
 				buttons[i].setActive(buttons[i] == this);
 		}
 		this.tap = this.click;
+		this.mouseover = function(id){
+			buttonTipWorkingPowerText.setText(clickEvent.description());
+			buttonTip.visible = true;
+		}
+		this.mouseout = function(id){
+			buttonTip.visible = false;
+		}
 		this.hitArea = new PIXI.Rectangle(0, 0, 100, 40);
 
 		// Append this object to a list of buttons for click event processing
@@ -237,31 +254,23 @@ function init(){
 			this.text.setStyle({font: "15px Helvetica", fill: active ? "#ffffff" : "#afafaf"});
 	}
 
-	var clickMode = 0;
-	var selectButton = new Button("assets/cursor.png", "Select", function(id){
-		clickMode = 0;
-	}, true);
+	var clickCallback = FarmGame.prototype.select;
+	var selectButton = new Button("assets/cursor.png", "Select", FarmGame.prototype.select, true);
 	selectButton.x = width - 120;
 	selectButton.y = 10;
 	overlay.addChild(selectButton);
 
-	var cultivateButton = new Button("assets/cultivate.png", "Cultivate", function(id){
-		clickMode = 1;
-	}, false);
+	var cultivateButton = new Button("assets/cultivate.png", "Cultivate", FarmGame.prototype.cultivate, false);
 	cultivateButton.x = width - 120;
 	cultivateButton.y = 60;
 	overlay.addChild(cultivateButton);
 
-	var seedButton = new Button("assets/seed.png", "Seed", function(id){
-		clickMode = 2;
-	}, false);
+	var seedButton = new Button("assets/seed.png", "Seed", FarmGame.prototype.seed, false);
 	seedButton.x = width - 120;
 	seedButton.y = 110;
 	overlay.addChild(seedButton);
 
-	var harvestButton = new Button("assets/harvest.png", "Harvest", function(id){
-		clickMode = 3;
-	}, false);
+	var harvestButton = new Button("assets/harvest.png", "Harvest", FarmGame.prototype.harvest, false);
 	harvestButton.x = width - 120;
 	harvestButton.y = 160;
 	overlay.addChild(harvestButton);
