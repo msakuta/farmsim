@@ -7,6 +7,7 @@ function FarmGame(xs,ys){
 	this.cells = [];
 
 	this.workingPower = 100;
+	this.cash = 100;
 	this.time = 0;
 	this.autosave_time = 0;
 
@@ -118,7 +119,7 @@ FarmGame.prototype.update = function(){
 }
 
 FarmGame.prototype.serialize = function(){
-	var saveData = {workingPower: this.workingPower, xs: this.xs, ys: this.ys};
+	var saveData = {workingPower: this.workingPower, cash: this.cash, xs: this.xs, ys: this.ys};
 	var cells = [];
 	for(var x = 0; x < this.cells.length; x++){
 		var row = [];
@@ -136,6 +137,7 @@ FarmGame.prototype.deserialize = function(stream){
 	var data = JSON.parse(stream);
 	if(data != null){
 		this.workingPower = data.workingPower;
+		this.cash = data.cash;
 		this.xs = data.xs;
 		this.ys = data.ys;
 		this.cells = [];
@@ -184,10 +186,12 @@ FarmGame.prototype.cultivate = function(cell){
 
 FarmGame.prototype.seed = function(cell){
 	var workCost = 10; // Seeding is not a hard physical task.
-	if(this.workingPower < workCost)
+	var moneyCost = 1;
+	if(this.workingPower < workCost || this.cash < moneyCost)
 		return false; // Give up due to low working power
 	if(cell.seed()){
 		this.workingPower -= workCost;
+		this.cash -= moneyCost;
 		return true;
 	}
 	else

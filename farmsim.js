@@ -142,7 +142,7 @@ function init(){
 	var gstatusPanelFrame = new PIXI.Graphics();
 	gstatusPanelFrame.beginFill(0x000000, 0.5);
 	gstatusPanelFrame.lineStyle(2, 0xffffff, 1);
-	gstatusPanelFrame.drawRect(0, 0, 120, 35);
+	gstatusPanelFrame.drawRect(0, 0, 120, 55);
 	gstatusPanel.addChild(gstatusPanelFrame);
 	var gstatusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	gstatusText.y = 5;
@@ -160,8 +160,12 @@ function init(){
 	gstatusWPBar.x = 10;
 	gstatusWPBar.y = 20;
 	gstatusPanel.addChild(gstatusWPBar);
+	var gstatusCashText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
+	gstatusCashText.x = 5;
+	gstatusCashText.y = 30;
+	gstatusPanel.addChild(gstatusCashText);
 	gstatusPanel.x = 10;
-	gstatusPanel.y = height - 45;
+	gstatusPanel.y = height - 65;
 	overlay.addChild(gstatusPanel);
 
 	var buttons = [];
@@ -262,6 +266,7 @@ function init(){
 
 		gstatusText.setText("Working Power: " + Math.floor(game.workingPower));
 		gstatusWPBar.scale.x = game.workingPower / 100;
+		gstatusCashText.setText("Cash: $" + Math.floor(game.cash));
 
 		renderer.render(stage);
 
