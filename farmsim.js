@@ -137,6 +137,25 @@ function init(){
 	statusPanel.y = 10;
 	overlay.addChild(statusPanel);
 
+	function Bar(x, y){
+		PIXI.DisplayObjectContainer.call(this);
+		this.x = x;
+		this.y = y;
+		this.backBar = new PIXI.Graphics();
+		this.backBar.beginFill(0xff0000, 1.0);
+		this.backBar.drawRect(0, 0, 100, 3);
+		this.addChild(this.backBar);
+		this.topBar = new PIXI.Graphics();
+		this.topBar.beginFill(0x00ff00, 1.0);
+		this.topBar.drawRect(0, 0, 100, 3);
+		this.addChild(this.topBar);
+	}
+	Bar.prototype = new PIXI.DisplayObjectContainer();
+
+	Bar.prototype.setFactor = function(factor){
+		this.topBar.scale.x = factor;
+	}
+
 	// The global status panel shows information about the player and other global things.
 	var gstatusPanel = new PIXI.DisplayObjectContainer();
 	var gstatusPanelFrame = new PIXI.Graphics();
@@ -148,17 +167,7 @@ function init(){
 	gstatusText.y = 5;
 	gstatusText.x = 5;
 	gstatusPanel.addChild(gstatusText);
-	var gstatusWPBarBack = new PIXI.Graphics();
-	gstatusWPBarBack.beginFill(0xff0000, 1.0);
-	gstatusWPBarBack.drawRect(0, 0, 100, 3);
-	gstatusWPBarBack.x = 10;
-	gstatusWPBarBack.y = 20;
-	gstatusPanel.addChild(gstatusWPBarBack);
-	var gstatusWPBar = new PIXI.Graphics();
-	gstatusWPBar.beginFill(0x00ff00, 1.0);
-	gstatusWPBar.drawRect(0, 0, 100, 3);
-	gstatusWPBar.x = 10;
-	gstatusWPBar.y = 20;
+	var gstatusWPBar = new Bar(10, 20);
 	gstatusPanel.addChild(gstatusWPBar);
 	var gstatusCashText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	gstatusCashText.x = 5;
@@ -265,7 +274,7 @@ function init(){
 		cursorSprite.y = statusCursor.y * 32;
 
 		gstatusText.setText("Working Power: " + Math.floor(game.workingPower));
-		gstatusWPBar.scale.x = game.workingPower / 100;
+		gstatusWPBar.setFactor(game.workingPower / 100);
 		gstatusCashText.setText("Cash: $" + Math.floor(game.cash));
 
 		renderer.render(stage);
