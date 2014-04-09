@@ -43,6 +43,14 @@ function FarmGame(xs,ys){
 		else
 			return false;
 	}
+	this.Cell.prototype.harvest = function(){
+		if(2 < this.corn){
+			this.corn = 0;
+			return true;
+		}
+		else
+			return false;
+	}
 }
 
 FarmGame.prototype.init = function(){
@@ -192,6 +200,19 @@ FarmGame.prototype.seed = function(cell){
 	if(cell.seed()){
 		this.workingPower -= workCost;
 		this.cash -= moneyCost;
+		return true;
+	}
+	else
+		return false;
+}
+
+FarmGame.prototype.harvest = function(cell){
+	var workCost = 15; // Harvesting is a bit hard physical task.
+	if(this.workingPower < workCost)
+		return false; // Give up due to low working power
+	if(cell.harvest()){
+		this.workingPower -= workCost;
+		this.cash += 10;
 		return true;
 	}
 	else

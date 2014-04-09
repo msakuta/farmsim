@@ -54,6 +54,7 @@ function init(){
 					case 0: break;
 					case 1: game.cultivate(cell); break;
 					case 2: game.seed(cell); break;
+					case 3: game.harvest(cell); break;
 				}
 			};
 			groundSprite.mouseover = function(id){
@@ -257,6 +258,13 @@ function init(){
 	seedButton.x = width - 120;
 	seedButton.y = 110;
 	overlay.addChild(seedButton);
+
+	var harvestButton = new Button("assets/harvest.png", "Harvest", function(id){
+		clickMode = 3;
+	}, false);
+	harvestButton.x = width - 120;
+	harvestButton.y = 160;
+	overlay.addChild(harvestButton);
 
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
