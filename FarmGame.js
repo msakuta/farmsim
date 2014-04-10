@@ -13,7 +13,7 @@ function FarmGame(xs,ys){
 
 	this.Cell = function(grass){
 		this.grass = grass;
-		this.cultivated = false;
+		this.plowed = false;
 		this.corn = 0;
 		this.humidity = 0.5;
 	}
@@ -21,26 +21,26 @@ function FarmGame(xs,ys){
 		var v = this;
 		return {
 			grass: this.grass,
-			cultivated: this.cultivated,
+			plowed: this.plowed,
 			corn: this.corn,
 			humidity: this.humidity,
 		};
 	}
 	this.Cell.prototype.deserialize = function(data){
 		this.grass = data.grass;
-		this.cultivated = data.cultivated;
+		this.plowed = data.plowed;
 		this.corn = data.corn;
 		this.humidity = data.humidity;
 	}
-	this.Cell.prototype.cultivate = function(){
-		var ret = !this.cultivated || this.grass != 0;
+	this.Cell.prototype.plow = function(){
+		var ret = !this.plowed || this.grass != 0;
 		this.grass = 0;
-		this.cultivated = true;
+		this.plowed = true;
 		this.humidity /= 2; // Plowing soil releases humidity inside it.
 		return ret;
 	}
 	this.Cell.prototype.seed = function(){
-		if(this.cultivated && this.corn < 1){
+		if(this.plowed && this.corn < 1){
 			this.corn = 1;
 			return true;
 		}
@@ -201,18 +201,18 @@ FarmGame.prototype.deserialize = function(stream){
 FarmGame.prototype.select = function(cell){return true;}
 FarmGame.prototype.select.description = function(){return "Selects a cell to inspect";}
 
-FarmGame.prototype.cultivate = function(cell){
+FarmGame.prototype.plow = function(cell){
 	var workCost = 20; // Cultivation costs high
 	if(this.workingPower < workCost)
 		return false; // Give up due to low working power
-	if(cell.cultivate()){
+	if(cell.plow()){
 		this.workingPower -= workCost;
 		return true;
 	}
 	else
 		return false;
 }
-FarmGame.prototype.cultivate.description = function(){return "Cultivate and make ridges\nWorking Power Cost: 20";}
+FarmGame.prototype.plow.description = function(){return "Plow and make ridges\nWorking Power Cost: 20";}
 
 FarmGame.prototype.seed = function(cell){
 	var workCost = 10; // Seeding is not a hard physical task.

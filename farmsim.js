@@ -72,7 +72,7 @@ function init(){
 		var f = 0.5 * (cell.humidity);
 		cell.groundColorFilter.alpha = f;
 
-		cell.gs.setTexture(cell.cultivated ? ridgeTexture : groundTexture);
+		cell.gs.setTexture(cell.plowed ? ridgeTexture : groundTexture);
 
 		for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
 			if(cell.grass < grassThresholds[grassIndex])
@@ -269,10 +269,10 @@ function init(){
 	selectButton.y = 10;
 	overlay.addChild(selectButton);
 
-	var cultivateButton = new Button("assets/cultivate.png", "Cultivate", FarmGame.prototype.cultivate, false);
-	cultivateButton.x = width - 120;
-	cultivateButton.y = 60;
-	overlay.addChild(cultivateButton);
+	var plowButton = new Button("assets/plow.png", "Plow", FarmGame.prototype.plow, false);
+	plowButton.x = width - 120;
+	plowButton.y = 60;
+	overlay.addChild(plowButton);
 
 	var seedButton = new Button("assets/seed.png", "Seed", FarmGame.prototype.seed, false);
 	seedButton.x = width - 120;
@@ -298,7 +298,7 @@ function init(){
 		var statusCell = game.cells[statusCursor.x][statusCursor.y];
 		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
 			+ "Grass: " + Math.floor(100 * statusCell.grass) + "\n"
-			+ "Cultivated: " + (statusCell.cultivated ? "Yes" : "No") + "\n"
+			+ "Plowed: " + (statusCell.plowed ? "Yes" : "No") + "\n"
 			+ "Corn growth: " + Math.floor(statusCell.corn * 100) + "\n"
 			+ "Humidity: " + Math.floor(statusCell.humidity * 100));
 
