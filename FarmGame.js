@@ -15,6 +15,7 @@ function FarmGame(xs,ys){
 		this.grass = grass;
 		this.cultivated = false;
 		this.corn = 0;
+		this.humidity = 0.5;
 	}
 	this.Cell.prototype.serialize = function(){
 		var v = this;
@@ -22,17 +23,20 @@ function FarmGame(xs,ys){
 			grass: this.grass,
 			cultivated: this.cultivated,
 			corn: this.corn,
+			humidity: this.humidity,
 		};
 	}
 	this.Cell.prototype.deserialize = function(data){
 		this.grass = data.grass;
 		this.cultivated = data.cultivated;
 		this.corn = data.corn;
+		this.humidity = data.humidity;
 	}
 	this.Cell.prototype.cultivate = function(){
 		var ret = !this.cultivated || this.grass != 0;
 		this.grass = 0;
 		this.cultivated = true;
+		this.humidity /= 2; // Plowing soil releases humidity inside it.
 		return ret;
 	}
 	this.Cell.prototype.seed = function(){
@@ -50,6 +54,11 @@ function FarmGame(xs,ys){
 		}
 		else
 			return false;
+	}
+	this.Cell.prototype.water = function(){
+		// Watering soil makes humidity to approach 1 but never reach it.
+		this.humidity += (1. - this.humidity) * 0.5;
+		return true;
 	}
 }
 
@@ -77,21 +86,26 @@ FarmGame.prototype.onUpdateCell = function(cell,x,y){}
 
 FarmGame.prototype.update = function(){
 
+	// Humidity coefficient of growth for crops and weeds
+	function humidityGrowth(cell){
+		return (cell.humidity + 0.25) / 1.25;
+	}
+
 	// The growth of the grass depends on adjacent cells' grass density.
-	function getGrowth(x,y){
+	function getGrowth(cell,x,y){
 		var ret = 0.0001;
 		if(0 <= x - 1) ret += this.cells[x - 1][y].grass * 0.0001;
 		if(x + 1 < this.xs) ret += this.cells[x + 1][y].grass * 0.0001;
 		if(0 <= y - 1) ret += this.cells[x][y - 1].grass * 0.0001;
 		if(y + 1 < this.ys) ret += this.cells[x][y + 1].grass * 0.0001;
-		return ret;
+		return ret * humidityGrowth(cell);
 	}
 
 	for(var x = 0; x < this.cells.length; x++){
 		for(var y = 0; y < this.cells[x].length; y++){
 			var cell = this.cells[x][y];
 
-			var growth = getGrowth.call(this, x, y);
+			var growth = getGrowth.call(this, cell, x, y);
 
 			if(cell.grass < 1. - growth)
 				cell.grass += growth;
@@ -100,7 +114,11 @@ FarmGame.prototype.update = function(){
 
 			// Increase corn growth.  Lower growth if there are weeds.
 			if(0 < cell.corn)
-				cell.corn += 0.0005 * (1. - cell.grass);
+				cell.corn += 0.0005 * (1. - cell.grass)
+					* humidityGrowth(cell); // Humid soil grows crop better
+
+			// Gradually disperse into the air
+			cell.humidity *= 0.9999;
 
 			game.onUpdateCell(cell,x,y);
 		}
@@ -224,6 +242,19 @@ FarmGame.prototype.harvest = function(cell){
 		return false;
 }
 FarmGame.prototype.harvest.description = function(){return "Harvest and sell crops\nto gain money\nWorking Power Cost: 15";}
+
+FarmGame.prototype.water = function(cell){
+	var workCost = 5; // Harvesting is a bit hard physical task.
+	if(this.workingPower < workCost)
+		return false; // Give up due to low working power
+	if(cell.water()){
+		this.workingPower -= workCost;
+		return true;
+	}
+	else
+		return false;
+}
+FarmGame.prototype.water.description = function(){return "Water soil\nWorking Power Cost: 5";}
 
 FarmGame.prototype.onAutoSave = function(str){
 }

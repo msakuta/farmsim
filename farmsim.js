@@ -60,8 +60,17 @@ function init(){
 				id.target.mouseover(id);
 			}
 			ground.addChild(groundSprite);
+
+			// Add the color filter after the ground sprite to cover over it.
+			cell.groundColorFilter = new PIXI.Graphics();
+			cell.groundColorFilter.beginFill(0x000000, 1.);
+			cell.groundColorFilter.drawRect(groundSprite.x, groundSprite.y, 32, 32);
+			ground.addChild(cell.groundColorFilter);
+
 			cell.gs = groundSprite;
 		}
+		var f = 0.5 * (cell.humidity);
+		cell.groundColorFilter.alpha = f;
 
 		cell.gs.setTexture(cell.cultivated ? ridgeTexture : groundTexture);
 
@@ -123,7 +132,7 @@ function init(){
 	var statusPanelFrame = new PIXI.Graphics();
 	statusPanelFrame.beginFill(0x000000, 0.5);
 	statusPanelFrame.lineStyle(2, 0xffffff, 1);
-	statusPanelFrame.drawRect(0, 0, 120, 65);
+	statusPanelFrame.drawRect(0, 0, 120, 80);
 	statusPanel.addChild(statusPanelFrame);
 	var statusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	statusText.y = 5;
@@ -275,6 +284,11 @@ function init(){
 	harvestButton.y = 160;
 	overlay.addChild(harvestButton);
 
+	var waterButton = new Button("assets/water.png", "Water", FarmGame.prototype.water, false);
+	waterButton.x = width - 120;
+	waterButton.y = 210;
+	overlay.addChild(waterButton);
+
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
 
@@ -285,7 +299,8 @@ function init(){
 		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
 			+ "Grass: " + Math.floor(100 * statusCell.grass) + "\n"
 			+ "Cultivated: " + (statusCell.cultivated ? "Yes" : "No") + "\n"
-			+ "Corn growth: " + Math.floor(statusCell.corn * 100));
+			+ "Corn growth: " + Math.floor(statusCell.corn * 100) + "\n"
+			+ "Humidity: " + Math.floor(statusCell.humidity * 100));
 
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;
