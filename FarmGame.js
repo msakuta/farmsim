@@ -53,7 +53,6 @@ function FarmGame(xs,ys){
 	}
 	this.Cell.prototype.harvest = function(){
 		if(2 < this.corn){
-			this.corn = 0;
 			return true;
 		}
 		else
@@ -252,7 +251,10 @@ FarmGame.prototype.harvest = function(cell){
 		return false; // Give up due to low working power
 	if(cell.harvest()){
 		this.workingPower -= workCost;
-		this.cash += 10;
+		// Overgrown crops do not produce money but consumes working power to clean.
+		if(cell.corn < 3.0)
+			this.cash += 10;
+		cell.corn = 0;
 		return true;
 	}
 	else

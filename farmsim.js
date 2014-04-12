@@ -35,9 +35,10 @@ function init(){
 		PIXI.Texture.fromImage("assets/corn2.png"),
 		PIXI.Texture.fromImage("assets/corn3.png"),
 		PIXI.Texture.fromImage("assets/corn4.png"),
+		PIXI.Texture.fromImage("assets/corn5.png"),
 	];
 	var cornThresholds = [
-		1.0, 1.25, 1.50, 1.75, 2.0
+		1.0, 1.25, 1.50, 1.75, 2.0, 3.0
 	];
 
 	var ground = new PIXI.DisplayObjectContainer();
