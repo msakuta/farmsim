@@ -297,7 +297,7 @@ function init(){
 
 		var statusCell = game.cells[statusCursor.x][statusCursor.y];
 		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
-			+ "Weeds: " + Math.floor(100 * statusCell.weeds) + "\n"
+			+ "Weeds: " + Math.floor(100 * statusCell.weeds) + " (" + Math.floor(100 * statusCell.weedRoots) + ")\n"
 			+ "Plowed: " + (statusCell.plowed ? "Yes" : "No") + "\n"
 			+ "Corn growth: " + Math.floor(statusCell.corn * 100) + "\n"
 			+ "Humidity: " + Math.floor(statusCell.humidity * 100));

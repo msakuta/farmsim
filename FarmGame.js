@@ -13,6 +13,7 @@ function FarmGame(xs,ys){
 
 	this.Cell = function(weeds){
 		this.weeds = weeds;
+		this.weedRoots = 0.5;
 		this.plowed = false;
 		this.corn = 0;
 		this.humidity = 0.5;
@@ -21,6 +22,7 @@ function FarmGame(xs,ys){
 		var v = this;
 		return {
 			weeds: this.weeds,
+			weedRoots: this.weedRoots,
 			plowed: this.plowed,
 			corn: this.corn,
 			humidity: this.humidity,
@@ -28,6 +30,7 @@ function FarmGame(xs,ys){
 	}
 	this.Cell.prototype.deserialize = function(data){
 		this.weeds = data.weeds;
+		this.weedRoots = data.weedRoots;
 		this.plowed = data.plowed;
 		this.corn = data.corn;
 		this.humidity = data.humidity;
@@ -35,6 +38,7 @@ function FarmGame(xs,ys){
 	this.Cell.prototype.plow = function(){
 		var ret = !this.plowed || this.weeds != 0;
 		this.weeds = 0;
+		this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
 		this.plowed = true;
 		this.humidity /= 2; // Plowing soil releases humidity inside it.
 		return ret;
@@ -92,12 +96,12 @@ FarmGame.prototype.update = function(){
 	}
 
 	// The growth of the grass depends on adjacent cells' grass density.
-	function getGrowth(cell,x,y){
-		var ret = 0.0001;
-		if(0 <= x - 1) ret += this.cells[x - 1][y].weeds * 0.0001;
-		if(x + 1 < this.xs) ret += this.cells[x + 1][y].weeds * 0.0001;
-		if(0 <= y - 1) ret += this.cells[x][y - 1].weeds * 0.0001;
-		if(y + 1 < this.ys) ret += this.cells[x][y + 1].weeds * 0.0001;
+	function getGrowth(cell,x,y,getter){
+		var ret = 0;
+		if(0 <= x - 1) ret += getter(this.cells[x - 1][y]);
+		if(x + 1 < this.xs) ret += getter(this.cells[x + 1][y]);
+		if(0 <= y - 1) ret += getter(this.cells[x][y - 1]);
+		if(y + 1 < this.ys) ret += getter(this.cells[x][y + 1]);
 		return ret * humidityGrowth(cell);
 	}
 
@@ -105,12 +109,25 @@ FarmGame.prototype.update = function(){
 		for(var y = 0; y < this.cells[x].length; y++){
 			var cell = this.cells[x][y];
 
-			var growth = getGrowth.call(this, cell, x, y);
+			// Obtain growth of weeds
+			var growth = (0.0001
+				+ getGrowth.call(this, cell, x, y, function(cell){return cell.weeds;}))
+					* 0.0001 * cell.weedRoots;
 
 			if(cell.weeds < 1. - growth)
 				cell.weeds += growth;
 			else
 				cell.weeds = 1.;
+
+			// The roots grow very slowly compared to stems and leaves
+			var rootsGrowth = (cell.weedRoots
+				+ getGrowth.call(this, cell, x, y, function(cell){return (cell.weeds + cell.weedRoots) * 0.1;}))
+					* 0.00001;
+
+			if(cell.weedRoots < 1. - rootsGrowth)
+				cell.weedRoots += rootsGrowth;
+			else
+				cell.weedRoots = 1.;
 
 			// Increase corn growth.  Lower growth if there are weeds.
 			if(0 < cell.corn)
