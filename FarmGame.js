@@ -11,8 +11,8 @@ function FarmGame(xs,ys){
 	this.time = 0;
 	this.autosave_time = 0;
 
-	this.Cell = function(grass){
-		this.grass = grass;
+	this.Cell = function(weeds){
+		this.weeds = weeds;
 		this.plowed = false;
 		this.corn = 0;
 		this.humidity = 0.5;
@@ -20,21 +20,21 @@ function FarmGame(xs,ys){
 	this.Cell.prototype.serialize = function(){
 		var v = this;
 		return {
-			grass: this.grass,
+			weeds: this.weeds,
 			plowed: this.plowed,
 			corn: this.corn,
 			humidity: this.humidity,
 		};
 	}
 	this.Cell.prototype.deserialize = function(data){
-		this.grass = data.grass;
+		this.weeds = data.weeds;
 		this.plowed = data.plowed;
 		this.corn = data.corn;
 		this.humidity = data.humidity;
 	}
 	this.Cell.prototype.plow = function(){
-		var ret = !this.plowed || this.grass != 0;
-		this.grass = 0;
+		var ret = !this.plowed || this.weeds != 0;
+		this.weeds = 0;
 		this.plowed = true;
 		this.humidity /= 2; // Plowing soil releases humidity inside it.
 		return ret;
@@ -70,8 +70,8 @@ FarmGame.prototype.init = function(){
 		for(var x = 0; x < this.xs; x++){
 			var row = [];
 			for(var y = 0; y < this.ys; y++){
-				var grass = this.rng.next();
-				var cell = new this.Cell(grass);
+				var weeds = this.rng.next();
+				var cell = new this.Cell(weeds);
 
 				this.onUpdateCell(cell,x,y);
 
@@ -94,10 +94,10 @@ FarmGame.prototype.update = function(){
 	// The growth of the grass depends on adjacent cells' grass density.
 	function getGrowth(cell,x,y){
 		var ret = 0.0001;
-		if(0 <= x - 1) ret += this.cells[x - 1][y].grass * 0.0001;
-		if(x + 1 < this.xs) ret += this.cells[x + 1][y].grass * 0.0001;
-		if(0 <= y - 1) ret += this.cells[x][y - 1].grass * 0.0001;
-		if(y + 1 < this.ys) ret += this.cells[x][y + 1].grass * 0.0001;
+		if(0 <= x - 1) ret += this.cells[x - 1][y].weeds * 0.0001;
+		if(x + 1 < this.xs) ret += this.cells[x + 1][y].weeds * 0.0001;
+		if(0 <= y - 1) ret += this.cells[x][y - 1].weeds * 0.0001;
+		if(y + 1 < this.ys) ret += this.cells[x][y + 1].weeds * 0.0001;
 		return ret * humidityGrowth(cell);
 	}
 
@@ -107,14 +107,14 @@ FarmGame.prototype.update = function(){
 
 			var growth = getGrowth.call(this, cell, x, y);
 
-			if(cell.grass < 1. - growth)
-				cell.grass += growth;
+			if(cell.weeds < 1. - growth)
+				cell.weeds += growth;
 			else
-				cell.grass = 1.;
+				cell.weeds = 1.;
 
 			// Increase corn growth.  Lower growth if there are weeds.
 			if(0 < cell.corn)
-				cell.corn += 0.0005 * (1. - cell.grass)
+				cell.corn += 0.0005 * (1. - cell.weeds)
 					* humidityGrowth(cell); // Humid soil grows crop better
 
 			// Gradually disperse into the air
@@ -174,7 +174,7 @@ FarmGame.prototype.deserialize = function(stream){
 				var c = cells[x][y];
 				if(!c)
 					continue;
-				var cell = new this.Cell(c.grass);
+				var cell = new this.Cell(c.weeds);
 				cell.deserialize(c);
 				row.push(cell);
 				this.onUpdateCell(cell,x,y);
@@ -186,8 +186,8 @@ FarmGame.prototype.deserialize = function(stream){
 		for(var x = 0; x < this.xs; x++){
 			var row = [];
 			for(var y = 0; y < this.ys; y++){
-				var grass = this.rng.next();
-				var cell = new this.Cell(grass);
+				var weeds = this.rng.next();
+				var cell = new this.Cell(weeds);
 
 				this.onUpdateCell(cell,x,y);
 

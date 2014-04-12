@@ -21,12 +21,12 @@ function init(){
 
 	var groundTexture = PIXI.Texture.fromImage("assets/dirt.png");
 	var ridgeTexture = PIXI.Texture.fromImage("assets/ridge.png");
-	var grassTextures = [
-		PIXI.Texture.fromImage("assets/grass1.png"),
-		PIXI.Texture.fromImage("assets/grass2.png"),
-		PIXI.Texture.fromImage("assets/grass3.png"),
+	var weedsTextures = [
+		PIXI.Texture.fromImage("assets/weeds1.png"),
+		PIXI.Texture.fromImage("assets/weeds2.png"),
+		PIXI.Texture.fromImage("assets/weeds3.png"),
 	];
-	var grassThresholds = [
+	var weedsThresholds = [
 		0.25, 0.50, 0.75
 	];
 	var cornTextures = [
@@ -74,24 +74,24 @@ function init(){
 
 		cell.gs.setTexture(cell.plowed ? ridgeTexture : groundTexture);
 
-		for(var grassIndex = 0; grassIndex < grassTextures.length; grassIndex++){
-			if(cell.grass < grassThresholds[grassIndex])
+		for(var weedsIndex = 0; weedsIndex < weedsTextures.length; weedsIndex++){
+			if(cell.weeds < weedsThresholds[weedsIndex])
 				break;
 		}
-		if(0 < grassIndex){
-			if(cell.grassSprite == undefined){
-				var grassSprite = new PIXI.Sprite(grassTextures[grassIndex - 1]);
+		if(0 < weedsIndex){
+			if(cell.weedsSprite == undefined){
+				var weedsSprite = new PIXI.Sprite(weedsTextures[weedsIndex - 1]);
 
-				grassSprite.position = cell.gs.position;
-				ground.addChild(grassSprite);
-				cell.grassSprite = grassSprite;
+				weedsSprite.position = cell.gs.position;
+				ground.addChild(weedsSprite);
+				cell.weedsSprite = weedsSprite;
 			}
 			else
-				cell.grassSprite.setTexture(grassTextures[grassIndex - 1]);
+				cell.weedsSprite.setTexture(weedsTextures[weedsIndex - 1]);
 		}
-		else if(cell.grassSprite != undefined){
-			ground.removeChild(cell.grassSprite);
-			cell.grassSprite = undefined;
+		else if(cell.weedsSprite != undefined){
+			ground.removeChild(cell.weedsSprite);
+			cell.weedsSprite = undefined;
 		}
 		for(var cornIndex = 0; cornIndex < cornTextures.length; cornIndex++){
 			if(cell.corn < cornThresholds[cornIndex])
@@ -297,7 +297,7 @@ function init(){
 
 		var statusCell = game.cells[statusCursor.x][statusCursor.y];
 		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
-			+ "Grass: " + Math.floor(100 * statusCell.grass) + "\n"
+			+ "Weeds: " + Math.floor(100 * statusCell.weeds) + "\n"
 			+ "Plowed: " + (statusCell.plowed ? "Yes" : "No") + "\n"
 			+ "Corn growth: " + Math.floor(statusCell.corn * 100) + "\n"
 			+ "Humidity: " + Math.floor(statusCell.humidity * 100));
