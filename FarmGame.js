@@ -217,7 +217,7 @@ FarmGame.prototype.deserialize = function(stream){
 }
 
 FarmGame.prototype.select = function(cell){return true;}
-FarmGame.prototype.select.description = function(){return "Selects a cell to inspect";}
+FarmGame.prototype.select.description = function(){return i18n.t("Selects a cell to inspect");}
 
 FarmGame.prototype.plow = function(cell){
 	var workCost = 20; // Cultivation costs high
@@ -230,7 +230,10 @@ FarmGame.prototype.plow = function(cell){
 	else
 		return false;
 }
-FarmGame.prototype.plow.description = function(){return "Plow and make ridges\nWorking Power Cost: 20";}
+FarmGame.prototype.plow.description = function(){
+	return i18n.t("Plow and make ridges") + "\n"
+		+ i18n.t("Working Power Cost") + ": 20";
+}
 
 FarmGame.prototype.seed = function(cell){
 	var workCost = 10; // Seeding is not a hard physical task.
@@ -245,7 +248,11 @@ FarmGame.prototype.seed = function(cell){
 	else
 		return false;
 }
-FarmGame.prototype.seed.description = function(){return "Apply crop seeds\nWorking Power Cost: 10\nMoney cost: 1";}
+FarmGame.prototype.seed.description = function(){
+	return i18n.t("Apply crop seeds") + "\n"
+		+ i18n.t("Working Power Cost") + ": 10\n"
+		+ i18n.t("Money Cost") + ": $1";
+}
 
 FarmGame.prototype.harvest = function(cell){
 	var workCost = 15; // Harvesting is a bit hard physical task.
@@ -262,7 +269,10 @@ FarmGame.prototype.harvest = function(cell){
 	else
 		return false;
 }
-FarmGame.prototype.harvest.description = function(){return "Harvest and sell crops\nto gain money\nWorking Power Cost: 15";}
+FarmGame.prototype.harvest.description = function(){
+	return i18n.t("Harvest and sell crops\nto gain money")
+		+ "\n" + i18n.t("Working Power Cost") + ": 15";
+}
 
 FarmGame.prototype.water = function(cell){
 	var workCost = 5; // Harvesting is a bit hard physical task.
@@ -275,7 +285,10 @@ FarmGame.prototype.water = function(cell){
 	else
 		return false;
 }
-FarmGame.prototype.water.description = function(){return "Water soil\nWorking Power Cost: 5";}
+FarmGame.prototype.water.description = function(){
+	return i18n.t("Water soil") + "\n"
+		+ i18n.t("Working Power Cost") + ": 5";
+}
 
 FarmGame.prototype.onAutoSave = function(str){
 }

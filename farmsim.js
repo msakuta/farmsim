@@ -5,7 +5,9 @@ var resources = {
 			"Plow" : "Plow",
 			"Seed" : "Seed",
 			"Harvest" : "Harvest",
-			"Water" : "Water"
+			"Water" : "Water",
+			"Selects a cell to inspect" : "Selects a cell to inspect",
+			"Working Power" : "Working Power"
 		}
 	},
 	"ja": {
@@ -14,7 +16,21 @@ var resources = {
 			"Plow" : "耕す",
 			"Seed" : "種まき",
 			"Harvest" : "収穫",
-			"Water" : "水やり"
+			"Water" : "水やり",
+			"Selects a cell to inspect" : "セルを選択して調査",
+			"Plow and make ridges" : "耕して畝を作る",
+			"Apply crop seeds" : "作物の種を植える",
+			"Harvest and sell crops\nto gain money" : "作物を収穫して販売する",
+			"Water soil" : "土壌に水を撒く",
+			"Working Power" : "労働力",
+			"Working Power Cost" : "労働力消費",
+			"Cash" : "資金",
+			"Money Cost" : "費用",
+			"Pos" : "位置",
+			"Weeds" : "雑草",
+			"Plowed" : "畝立て",
+			"Corn growth" : "トウモロコシ生育",
+			"Humidity" : "湿度"
 		}
 	}
 }
@@ -22,7 +38,7 @@ var resources = {
 // Obtain the browser's preferred language.
 var currentLanguage = (window.navigator.language || window.navigator.userLanguage || window.navigator.userLanguage).substr(0, 2);
 
-i18n.init({fallbackLng: 'en', resStore: resources, getAsync: false});
+i18n.init({lng: currentLanguage, fallbackLng: 'en', resStore: resources, getAsync: false});
 
 
 var width;
@@ -324,18 +340,18 @@ function init(){
 		game.update();
 
 		var statusCell = game.cells[statusCursor.x][statusCursor.y];
-		statusText.setText("Pos: " + statusCursor.x + ", " + statusCursor.y + "\n"
-			+ "Weeds: " + Math.floor(100 * statusCell.weeds) + " (" + Math.floor(100 * statusCell.weedRoots) + ")\n"
-			+ "Plowed: " + (statusCell.plowed ? "Yes" : "No") + "\n"
-			+ "Corn growth: " + Math.floor(statusCell.corn * 100) + "\n"
-			+ "Humidity: " + Math.floor(statusCell.humidity * 100));
+		statusText.setText(i18n.t("Pos") + ": " + statusCursor.x + ", " + statusCursor.y + "\n"
+			+ i18n.t("Weeds") + ": " + Math.floor(100 * statusCell.weeds) + " (" + Math.floor(100 * statusCell.weedRoots) + ")\n"
+			+ i18n.t("Plowed") + ": " + (statusCell.plowed ? "Yes" : "No") + "\n"
+			+ i18n.t("Corn growth") + ": " + Math.floor(statusCell.corn * 100) + "\n"
+			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100));
 
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;
 
-		gstatusText.setText("Working Power: " + Math.floor(game.workingPower));
+		gstatusText.setText(i18n.t("Working Power") + ": " + Math.floor(game.workingPower));
 		gstatusWPBar.setFactor(game.workingPower / 100);
-		gstatusCashText.setText("Cash: $" + Math.floor(game.cash));
+		gstatusCashText.setText(i18n.t("Cash") + ": $" + Math.floor(game.cash));
 
 		renderer.render(stage);
 
