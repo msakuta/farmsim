@@ -129,8 +129,10 @@ FarmGame.prototype.update = function(){
 				cell.weedRoots = 1.;
 
 			// Increase corn growth.  Lower growth if there are weeds.
+			// If the corn grow enough, it will degrade no matter how weeds are grown, but it
+			// still depends on humidity (wet crops rots faster).
 			if(0 < cell.corn)
-				cell.corn += 0.0005 * (1. - cell.weeds)
+				cell.corn += 0.0005 * (cell.corn < 2 ? 1. - cell.weeds : 1.)
 					* humidityGrowth(cell); // Humid soil grows crop better
 
 			// Gradually disperse into the air
