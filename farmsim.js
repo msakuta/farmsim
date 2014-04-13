@@ -1,3 +1,30 @@
+var resources = {
+	"en": {
+		translation: {
+			"Select" : "Select",
+			"Plow" : "Plow",
+			"Seed" : "Seed",
+			"Harvest" : "Harvest",
+			"Water" : "Water"
+		}
+	},
+	"ja": {
+		translation: {
+			"Select" : "選択",
+			"Plow" : "耕す",
+			"Seed" : "種まき",
+			"Harvest" : "収穫",
+			"Water" : "水やり"
+		}
+	}
+}
+
+// Obtain the browser's preferred language.
+var currentLanguage = (window.navigator.language || window.navigator.userLanguage || window.navigator.userLanguage).substr(0, 2);
+
+i18n.init({fallbackLng: 'en', resStore: resources, getAsync: false});
+
+
 var width;
 var height;
 var stage;
@@ -265,27 +292,27 @@ function init(){
 	}
 
 	var clickCallback = FarmGame.prototype.select;
-	var selectButton = new Button("assets/cursor.png", "Select", FarmGame.prototype.select, true);
+	var selectButton = new Button("assets/cursor.png", i18n.t("Select"), FarmGame.prototype.select, true);
 	selectButton.x = width - 120;
 	selectButton.y = 10;
 	overlay.addChild(selectButton);
 
-	var plowButton = new Button("assets/plow.png", "Plow", FarmGame.prototype.plow, false);
+	var plowButton = new Button("assets/plow.png", i18n.t("Plow"), FarmGame.prototype.plow, false);
 	plowButton.x = width - 120;
 	plowButton.y = 60;
 	overlay.addChild(plowButton);
 
-	var seedButton = new Button("assets/seed.png", "Seed", FarmGame.prototype.seed, false);
+	var seedButton = new Button("assets/seed.png", i18n.t("Seed"), FarmGame.prototype.seed, false);
 	seedButton.x = width - 120;
 	seedButton.y = 110;
 	overlay.addChild(seedButton);
 
-	var harvestButton = new Button("assets/harvest.png", "Harvest", FarmGame.prototype.harvest, false);
+	var harvestButton = new Button("assets/harvest.png", i18n.t("Harvest"), FarmGame.prototype.harvest, false);
 	harvestButton.x = width - 120;
 	harvestButton.y = 160;
 	overlay.addChild(harvestButton);
 
-	var waterButton = new Button("assets/water.png", "Water", FarmGame.prototype.water, false);
+	var waterButton = new Button("assets/water.png", i18n.t("Water"), FarmGame.prototype.water, false);
 	waterButton.x = width - 120;
 	waterButton.y = 210;
 	overlay.addChild(waterButton);
