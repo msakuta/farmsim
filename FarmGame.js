@@ -228,7 +228,7 @@ FarmGame.prototype.select = function(cell){return true;}
 FarmGame.prototype.select.description = function(){return i18n.t("Selects a cell to inspect");}
 
 FarmGame.prototype.plow = function(cell){
-	var workCost = 20; // Cultivation costs high
+	var workCost = 20; // Plowing is a hard physical job.
 	if(this.workingPower < workCost)
 		return false; // Give up due to low working power
 	if(cell.plow()){
@@ -283,7 +283,7 @@ FarmGame.prototype.harvest.description = function(){
 }
 
 FarmGame.prototype.water = function(cell){
-	var workCost = 5; // Harvesting is a bit hard physical task.
+	var workCost = 5; // Watering is an easy task.
 	if(this.workingPower < workCost)
 		return false; // Give up due to low working power
 	if(cell.water()){
@@ -299,7 +299,7 @@ FarmGame.prototype.water.description = function(){
 }
 
 FarmGame.prototype.weeding = function(cell){
-	var workCost = 15; // Harvesting is a bit hard physical task.
+	var workCost = 15; // Weeding is a bit hard physical task.
 	if(this.workingPower < workCost)
 		return false; // Give up due to low working power
 	if(cell.weeding()){
