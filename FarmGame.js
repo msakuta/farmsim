@@ -63,6 +63,14 @@ function FarmGame(xs,ys){
 		this.humidity += (1. - this.humidity) * 0.5;
 		return true;
 	}
+	this.Cell.prototype.weeding = function(){
+		if(this.weeds == 0)
+			return false;
+		this.weeds = 0;
+		this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
+		this.humidity *= 0.75; // Humidity is rather kept compared to plowing.
+		return true;
+	}
 }
 
 FarmGame.prototype.init = function(){
@@ -288,6 +296,23 @@ FarmGame.prototype.water = function(cell){
 FarmGame.prototype.water.description = function(){
 	return i18n.t("Water soil") + "\n"
 		+ i18n.t("Working Power Cost") + ": 5";
+}
+
+FarmGame.prototype.weeding = function(cell){
+	var workCost = 15; // Harvesting is a bit hard physical task.
+	if(this.workingPower < workCost)
+		return false; // Give up due to low working power
+	if(cell.weeding()){
+		this.workingPower -= workCost;
+		return true;
+	}
+	else
+		return false;
+}
+FarmGame.prototype.weeding.description = function(){
+	return i18n.t("Weed out without plowing\n"
+		+ "Soil humidity is rather kept") + "\n"
+		+ i18n.t("Working Power Cost") + ": 15";
 }
 
 FarmGame.prototype.onAutoSave = function(str){

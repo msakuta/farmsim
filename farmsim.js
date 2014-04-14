@@ -17,11 +17,13 @@ var resources = {
 			"Seed" : "種まき",
 			"Harvest" : "収穫",
 			"Water" : "水やり",
+			"Weed" : "除草",
 			"Selects a cell to inspect" : "セルを選択して調査",
 			"Plow and make ridges" : "耕して畝を作る",
 			"Apply crop seeds" : "作物の種を植える",
 			"Harvest and sell crops\nto gain money" : "作物を収穫して販売する",
 			"Water soil" : "土壌に水を撒く",
+			"Weed out without plowing\nSoil humidity is rather kept" : "耕さずに雑草を引き抜く\n土壌の水分は比較的維持される",
 			"Working Power" : "労働力",
 			"Working Power Cost" : "労働力消費",
 			"Cash" : "資金",
@@ -332,6 +334,11 @@ function init(){
 	waterButton.x = width - 120;
 	waterButton.y = 210;
 	overlay.addChild(waterButton);
+
+	var weedButton = new Button("assets/weeding.png", i18n.t("Weed"), FarmGame.prototype.weeding, false);
+	weedButton.x = width - 120;
+	weedButton.y = 260;
+	overlay.addChild(weedButton);
 
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
