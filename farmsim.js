@@ -18,12 +18,14 @@ var resources = {
 			"Harvest" : "収穫",
 			"Water" : "水やり",
 			"Weed" : "除草",
+			"Mulch" : "マルチ",
 			"Selects a cell to inspect" : "セルを選択して調査",
 			"Plow and make ridges" : "耕して畝を作る",
 			"Apply crop seeds" : "作物の種を植える",
 			"Harvest and sell crops\nto gain money" : "作物を収穫して販売する",
 			"Water soil" : "土壌に水を撒く",
 			"Weed out without plowing\nSoil humidity is rather kept" : "耕さずに雑草を引き抜く\n土壌の水分は比較的維持される",
+			"Mulch soil with plastic blanket\nKeeps soil humidity" : "プラスチックのマルチシートで覆う\n土壌の水分を維持する",
 			"Working Power" : "労働力",
 			"Working Power Cost" : "労働力消費",
 			"Cash" : "資金",
@@ -66,6 +68,7 @@ function init(){
 
 	var groundTexture = PIXI.Texture.fromImage("assets/dirt.png");
 	var ridgeTexture = PIXI.Texture.fromImage("assets/ridge.png");
+	var mulchTexture = PIXI.Texture.fromImage("assets/mulch.png");
 	var weedsTextures = [
 		PIXI.Texture.fromImage("assets/weeds1.png"),
 		PIXI.Texture.fromImage("assets/weeds2.png"),
@@ -90,6 +93,21 @@ function init(){
 	stage.addChild(ground);
 
 	game.onUpdateCell = function(cell,x,y){
+		if(cell.graphics == undefined){
+			cell.graphics = new PIXI.DisplayObjectContainer();
+
+			// Temporarily add an utility function to PIXI.DisplayObjectContainer that
+			// returns the index of a given child.
+			// This function is used to insert mulch sheet after crops.
+			cell.graphics.getChildIndex = function(child){
+				for(var i = 0; i < this.children.length; i++)
+					if(this.children[i] === child)
+						return i;
+				return -1;
+			}
+
+			ground.addChild(cell.graphics);
+		}
 		if(cell.gs == undefined){
 			var groundSprite = new PIXI.Sprite(groundTexture);
 			groundSprite.position.x = x * 32;
@@ -105,13 +123,13 @@ function init(){
 				id.target.mousedown(id);
 				id.target.mouseover(id);
 			}
-			ground.addChild(groundSprite);
+			cell.graphics.addChild(groundSprite);
 
 			// Add the color filter after the ground sprite to cover over it.
 			cell.groundColorFilter = new PIXI.Graphics();
 			cell.groundColorFilter.beginFill(0x000000, 1.);
 			cell.groundColorFilter.drawRect(groundSprite.x, groundSprite.y, 32, 32);
-			ground.addChild(cell.groundColorFilter);
+			cell.graphics.addChild(cell.groundColorFilter);
 
 			cell.gs = groundSprite;
 		}
@@ -119,6 +137,23 @@ function init(){
 		cell.groundColorFilter.alpha = f;
 
 		cell.gs.setTexture(cell.plowed ? ridgeTexture : groundTexture);
+
+		// Add mulch sheet graphics
+		if(0 < cell.mulch && cell.mulchGraphics == undefined){
+			cell.mulchGraphics = new PIXI.Sprite(mulchTexture);
+			cell.mulchGraphics.position = cell.gs.position;
+			// We do not want mulch sheet graphics drawn over crops, so we find the corn sprite index
+			// and insert the mulch graphics after it.
+			var cropIndex = cell.cornSprite != undefined ? cell.graphics.getChildIndex(cell.cornSprite) : -1;
+			if(cropIndex == -1)
+				cell.graphics.addChild(cell.mulchGraphics);
+			else
+				cell.graphics.addChildAt(cell.mulchGraphics, cropIndex);
+		}
+		else if(cell.mulch == 0 && cell.mulchGraphics != undefined){
+			cell.graphics.removeChild(cell.mulchGraphics);
+			cell.mulchGraphics = undefined;
+		}
 
 		for(var weedsIndex = 0; weedsIndex < weedsTextures.length; weedsIndex++){
 			if(cell.weeds < weedsThresholds[weedsIndex])
@@ -129,14 +164,14 @@ function init(){
 				var weedsSprite = new PIXI.Sprite(weedsTextures[weedsIndex - 1]);
 
 				weedsSprite.position = cell.gs.position;
-				ground.addChild(weedsSprite);
+				cell.graphics.addChild(weedsSprite);
 				cell.weedsSprite = weedsSprite;
 			}
 			else
 				cell.weedsSprite.setTexture(weedsTextures[weedsIndex - 1]);
 		}
 		else if(cell.weedsSprite != undefined){
-			ground.removeChild(cell.weedsSprite);
+			cell.graphics.removeChild(cell.weedsSprite);
 			cell.weedsSprite = undefined;
 		}
 		for(var cornIndex = 0; cornIndex < cornTextures.length; cornIndex++){
@@ -148,14 +183,14 @@ function init(){
 				var cornSprite = new PIXI.Sprite(cornTextures[cornIndex - 1]);
 
 				cornSprite.position = cell.gs.position;
-				ground.addChild(cornSprite);
+				cell.graphics.addChild(cornSprite);
 				cell.cornSprite = cornSprite;
 			}
 			else
 				cell.cornSprite.setTexture(cornTextures[cornIndex - 1]);
 		}
 		else if(cell.cornSprite != undefined){
-			ground.removeChild(cell.cornSprite);
+			cell.graphics.removeChild(cell.cornSprite);
 			cell.cornSprite = undefined;
 		}
 	}
@@ -178,7 +213,7 @@ function init(){
 	var statusPanelFrame = new PIXI.Graphics();
 	statusPanelFrame.beginFill(0x000000, 0.5);
 	statusPanelFrame.lineStyle(2, 0xffffff, 1);
-	statusPanelFrame.drawRect(0, 0, 120, 80);
+	statusPanelFrame.drawRect(0, 0, 120, 90);
 	statusPanel.addChild(statusPanelFrame);
 	var statusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	statusText.y = 5;
@@ -232,13 +267,13 @@ function init(){
 	var buttonTipFiller = new PIXI.Graphics();
 	buttonTipFiller.beginFill(0x000000, 0.5);
 	buttonTipFiller.lineStyle(2, 0xffffff, 1);
-	buttonTipFiller.drawRect(0, 0, 150, 50);
+	buttonTipFiller.drawRect(0, 0, 170, 60);
 	buttonTip.addChild(buttonTipFiller);
 	var buttonTipWorkingPowerText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	buttonTipWorkingPowerText.x = 5;
 	buttonTipWorkingPowerText.y = 5;
 	buttonTip.addChild(buttonTipWorkingPowerText);
-	buttonTip.x = width - 280;
+	buttonTip.x = width - 300;
 	buttonTip.y = 10;
 	buttonTip.visible = false;
 	overlay.addChild(buttonTip);
@@ -266,6 +301,11 @@ function init(){
 			buttonTip.visible = false;
 		}
 		this.hitArea = new PIXI.Rectangle(0, 0, 100, 40);
+
+		if(buttons.length != 0 && buttons[buttons.length-1] != null){
+			this.x = buttons[buttons.length-1].x;
+			this.y = buttons[buttons.length-1].y + 50;
+		}
 
 		// Append this object to a list of buttons for click event processing
 		buttons.push(this);
@@ -340,6 +380,8 @@ function init(){
 	weedButton.y = 260;
 	overlay.addChild(weedButton);
 
+	overlay.addChild(new Button("assets/mulch.png", i18n.t("Mulch"), FarmGame.prototype.mulching, false));
+
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
 
@@ -351,7 +393,8 @@ function init(){
 			+ i18n.t("Weeds") + ": " + Math.floor(100 * statusCell.weeds) + " (" + Math.floor(100 * statusCell.weedRoots) + ")\n"
 			+ i18n.t("Plowed") + ": " + (statusCell.plowed ? "Yes" : "No") + "\n"
 			+ i18n.t("Corn growth") + ": " + Math.floor(statusCell.corn * 100) + "\n"
-			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100));
+			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100) + "\n"
+			+ i18n.t("Mulch") + ": " + (statusCell.mulch ? "Yes" : "No"));
 
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;

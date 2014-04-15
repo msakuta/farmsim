@@ -17,6 +17,7 @@ function FarmGame(xs,ys){
 		this.plowed = false;
 		this.corn = 0;
 		this.humidity = 0.5;
+		this.mulch = 0;
 	}
 	this.Cell.prototype.serialize = function(){
 		var v = this;
@@ -26,6 +27,7 @@ function FarmGame(xs,ys){
 			plowed: this.plowed,
 			corn: this.corn,
 			humidity: this.humidity,
+			mulch: this.mulch,
 		};
 	}
 	this.Cell.prototype.deserialize = function(data){
@@ -34,6 +36,7 @@ function FarmGame(xs,ys){
 		this.plowed = data.plowed;
 		this.corn = data.corn;
 		this.humidity = data.humidity;
+		this.mulch = data.mulch;
 	}
 	this.Cell.prototype.plow = function(){
 		var ret = !this.plowed || this.weeds != 0;
@@ -69,6 +72,12 @@ function FarmGame(xs,ys){
 		this.weeds = 0;
 		this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
 		this.humidity *= 0.75; // Humidity is rather kept compared to plowing.
+		return true;
+	}
+	this.Cell.prototype.mulching = function(){
+		if(0 < this.mulch)
+			return false;
+		this.mulch++;
 		return true;
 	}
 }
@@ -119,7 +128,7 @@ FarmGame.prototype.update = function(){
 			// Obtain growth of weeds
 			var growth = (0.0001
 				+ getGrowth.call(this, cell, x, y, function(cell){return cell.weeds;}))
-					* 0.0001 * cell.weedRoots;
+					* 0.0001 * cell.weedRoots / (1. + cell.mulch); // Mulching reduces weed growth.
 
 			if(cell.weeds < 1. - growth)
 				cell.weeds += growth;
@@ -144,7 +153,10 @@ FarmGame.prototype.update = function(){
 					* humidityGrowth(cell); // Humid soil grows crop better
 
 			// Gradually disperse into the air
-			cell.humidity *= 0.9999;
+			if(0 < cell.mulch) // Mulching reduces evaporation of humidity.
+				cell.humidity *= 0.99995;
+			else
+				cell.humidity *= 0.9999;
 
 			game.onUpdateCell(cell,x,y);
 		}
@@ -272,6 +284,7 @@ FarmGame.prototype.harvest = function(cell){
 		if(cell.corn < 3.0)
 			this.cash += 10;
 		cell.corn = 0;
+		cell.mulch = 0; // Harvesting discards mulch sheets
 		return true;
 	}
 	else
@@ -313,6 +326,26 @@ FarmGame.prototype.weeding.description = function(){
 	return i18n.t("Weed out without plowing\n"
 		+ "Soil humidity is rather kept") + "\n"
 		+ i18n.t("Working Power Cost") + ": 15";
+}
+
+FarmGame.prototype.mulching = function(cell){
+	var workCost = 10; // Mulching is a bit of physical work.
+	var moneyCost = 2; // and it costs money.
+	if(this.workingPower < workCost || this.cash < moneyCost)
+		return false;
+	if(cell.mulching()){
+		this.workingPower -= workCost;
+		this.cash -= moneyCost;
+		return true;
+	}
+	else
+		return false;
+}
+FarmGame.prototype.mulching.description = function(){
+	return i18n.t("Mulch soil with plastic blanket\n"
+		+ "Keeps soil humidity") + "\n"
+		+ i18n.t("Working Power Cost") + ": 10\n"
+		+ i18n.t("Money Cost") + ": $2";
 }
 
 FarmGame.prototype.onAutoSave = function(str){
