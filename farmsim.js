@@ -355,31 +355,11 @@ function init(){
 	selectButton.y = 10;
 	overlay.addChild(selectButton);
 
-	var plowButton = new Button("assets/plow.png", i18n.t("Plow"), FarmGame.prototype.plow, false);
-	plowButton.x = width - 120;
-	plowButton.y = 60;
-	overlay.addChild(plowButton);
-
-	var seedButton = new Button("assets/seed.png", i18n.t("Seed"), FarmGame.prototype.seed, false);
-	seedButton.x = width - 120;
-	seedButton.y = 110;
-	overlay.addChild(seedButton);
-
-	var harvestButton = new Button("assets/harvest.png", i18n.t("Harvest"), FarmGame.prototype.harvest, false);
-	harvestButton.x = width - 120;
-	harvestButton.y = 160;
-	overlay.addChild(harvestButton);
-
-	var waterButton = new Button("assets/water.png", i18n.t("Water"), FarmGame.prototype.water, false);
-	waterButton.x = width - 120;
-	waterButton.y = 210;
-	overlay.addChild(waterButton);
-
-	var weedButton = new Button("assets/weeding.png", i18n.t("Weed"), FarmGame.prototype.weeding, false);
-	weedButton.x = width - 120;
-	weedButton.y = 260;
-	overlay.addChild(weedButton);
-
+	overlay.addChild(new Button("assets/plow.png", i18n.t("Plow"), FarmGame.prototype.plow, false));
+	overlay.addChild(new Button("assets/seed.png", i18n.t("Seed"), FarmGame.prototype.seed, false));
+	overlay.addChild(new Button("assets/harvest.png", i18n.t("Harvest"), FarmGame.prototype.harvest, false));
+	overlay.addChild(new Button("assets/water.png", i18n.t("Water"), FarmGame.prototype.water, false));
+	overlay.addChild(new Button("assets/weeding.png", i18n.t("Weed"), FarmGame.prototype.weeding, false));
 	overlay.addChild(new Button("assets/mulch.png", i18n.t("Mulch"), FarmGame.prototype.mulching, false));
 
 	stage.addChild(overlay);
