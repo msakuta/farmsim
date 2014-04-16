@@ -365,8 +365,17 @@ function init(){
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
 
-	function animate() {
-		game.update();
+	// Variable to remember the last time of animation frame.
+	var lastTime = null;
+
+	function animate(timestamp) {
+		// Calculate the delta-time of this frame for game update process.
+		if(lastTime === null)
+			lastTime = timestamp;
+		var deltaTime = timestamp - lastTime;
+		lastTime = timestamp;
+
+		game.update(deltaTime);
 
 		var statusCell = game.cells[statusCursor.x][statusCursor.y];
 		statusText.setText(i18n.t("Pos") + ": " + statusCursor.x + ", " + statusCursor.y + "\n"

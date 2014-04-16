@@ -9,7 +9,8 @@ function FarmGame(xs,ys){
 	this.workingPower = 100;
 	this.cash = 100;
 	this.time = 0;
-	this.autosave_time = 0;
+	this.frameCount = 0;
+	this.autosave_frame = 0;
 
 	this.Cell = function(weeds){
 		this.weeds = weeds;
@@ -104,7 +105,20 @@ FarmGame.prototype.init = function(){
 
 FarmGame.prototype.onUpdateCell = function(cell,x,y){}
 
-FarmGame.prototype.update = function(){
+FarmGame.prototype.update = function(deltaTime){
+	var frameTime = 100; // Frame time interval in milliseconds
+	this.time += deltaTime;
+
+	// Repeat the frame procedure in constant interval.
+	while(frameTime < this.time){
+
+		this.updateInternal();
+
+		this.time -= frameTime;
+	}
+}
+
+FarmGame.prototype.updateInternal = function(){
 
 	// Humidity coefficient of growth for crops and weeds
 	function humidityGrowth(cell){
@@ -167,9 +181,9 @@ FarmGame.prototype.update = function(){
 	else
 		this.workingPower = 100;
 
-	this.time++;
+	this.frameCount++;
 
-	if(this.autosave_time + 100 < this.time){
+	if(this.autosave_frame + 100 < this.frameCount){
 
 		// Check for localStorage
 		if(typeof(Storage) !== "undefined"){
@@ -178,7 +192,7 @@ FarmGame.prototype.update = function(){
 			this.onAutoSave(serialData);
 		}
 
-		this.autosave_time += 100;
+		this.autosave_frame += 100;
 	}
 }
 
