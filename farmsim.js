@@ -33,7 +33,8 @@ var resources = {
 			"Pos" : "位置",
 			"Weeds" : "雑草",
 			"Plowed" : "畝立て",
-			"Corn growth" : "トウモロコシ生育",
+			"Corn" : "トウモロコシ",
+			"growth" : "生育",
 			"Humidity" : "湿度"
 		}
 	}
@@ -174,9 +175,12 @@ function init(){
 			cell.graphics.removeChild(cell.weedsSprite);
 			cell.weedsSprite = undefined;
 		}
-		for(var cornIndex = 0; cornIndex < cornTextures.length; cornIndex++){
-			if(cell.corn < cornThresholds[cornIndex])
-				break;
+		var cornIndex = 0;
+		if(cell.crop){
+			for(; cornIndex < cornTextures.length; cornIndex++){
+				if(cell.crop.amount < cornThresholds[cornIndex])
+					break;
+			}
 		}
 		if(0 < cornIndex){
 			if(cell.cornSprite == undefined){
@@ -381,9 +385,9 @@ function init(){
 		statusText.setText(i18n.t("Pos") + ": " + statusCursor.x + ", " + statusCursor.y + "\n"
 			+ i18n.t("Weeds") + ": " + Math.floor(100 * statusCell.weeds) + " (" + Math.floor(100 * statusCell.weedRoots) + ")\n"
 			+ i18n.t("Plowed") + ": " + (statusCell.plowed ? "Yes" : "No") + "\n"
-			+ i18n.t("Corn growth") + ": " + Math.floor(statusCell.corn * 100) + "\n"
 			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100) + "\n"
-			+ i18n.t("Mulch") + ": " + (statusCell.mulch ? "Yes" : "No"));
+			+ i18n.t("Mulch") + ": " + (statusCell.mulch ? "Yes" : "No") + "\n"
+			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("growth") + ": " + Math.floor(statusCell.crop.amount * 100) : ""));
 
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;

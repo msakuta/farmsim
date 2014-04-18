@@ -16,7 +16,7 @@ function FarmGame(xs,ys){
 		this.weeds = weeds;
 		this.weedRoots = 0.5;
 		this.plowed = false;
-		this.corn = 0;
+		this.crop = null;
 		this.humidity = 0.5;
 		this.mulch = 0;
 	}
@@ -26,7 +26,7 @@ function FarmGame(xs,ys){
 			weeds: this.weeds,
 			weedRoots: this.weedRoots,
 			plowed: this.plowed,
-			corn: this.corn,
+			crop: this.crop ? this.crop.serialize() : null,
 			humidity: this.humidity,
 			mulch: this.mulch,
 		};
@@ -35,7 +35,13 @@ function FarmGame(xs,ys){
 		this.weeds = data.weeds;
 		this.weedRoots = data.weedRoots;
 		this.plowed = data.plowed;
-		this.corn = data.corn;
+		// Try to find the class name in FarmGame object.
+		if(data.crop && data.crop.type in FarmGame){
+			// If found, try to instantiate an instance of it.
+			this.crop = new FarmGame[data.crop.type];
+			if(this.crop)
+				this.crop.deserialize(data.crop);
+		}
 		this.humidity = data.humidity;
 		this.mulch = data.mulch;
 	}
@@ -48,15 +54,15 @@ function FarmGame(xs,ys){
 		return ret;
 	}
 	this.Cell.prototype.seed = function(){
-		if(this.plowed && this.corn < 1){
-			this.corn = 1;
+		if(this.plowed && !this.crop){
+			this.crop = new FarmGame.Corn;
 			return true;
 		}
 		else
 			return false;
 	}
 	this.Cell.prototype.harvest = function(){
-		if(2 < this.corn){
+		if(this.crop && 2 < this.crop.amount){
 			return true;
 		}
 		else
@@ -82,6 +88,41 @@ function FarmGame(xs,ys){
 		return true;
 	}
 }
+
+FarmGame.Crop = function(){
+	this.type = "";
+	this.amount = 0;
+}
+
+FarmGame.Crop.prototype.serialize = function(){
+	return this; // Shorthand for serializing all the member variables.
+}
+
+FarmGame.Crop.prototype.deserialize = function(data){
+	this.amount = data.amount;
+}
+
+FarmGame.Crop.prototype.grow = function(growth){
+	this.amount += growth;
+}
+
+FarmGame.Crop.prototype.eval = function(){
+	// Overgrown crops do not produce money but consumes working power to clean.
+	if(2.0 <= this.amount && this.amount < 3.0)
+		return 10;
+	else
+		return 0;
+}
+
+
+FarmGame.Corn = function(){
+	FarmGame.Crop.apply(this, arguments);
+	this.type = "Corn";
+	this.amount = 1;
+}
+FarmGame.Corn.prototype = new FarmGame.Crop;
+
+
 
 FarmGame.prototype.init = function(){
 	if(typeof(Storage) !== "undefined"){
@@ -161,10 +202,10 @@ FarmGame.prototype.updateInternal = function(){
 
 			// Increase corn growth.  Lower growth if there are weeds.
 			// If the corn grow enough, it will degrade no matter how weeds are grown, but it
-			// still depends on humidity (wet crops rots faster).
-			if(0 < cell.corn)
-				cell.corn += 0.0005 * (cell.corn < 2 ? 1. - cell.weeds : 1.)
-					* humidityGrowth(cell); // Humid soil grows crop better
+			// still depends on humidity (wet crops rot faster).
+			if(cell.crop)
+				cell.crop.grow(0.0005 * (cell.crop.amount < 2 ? 1. - cell.weeds : 1.)
+					* humidityGrowth(cell)); // Humid soil grows crop better
 
 			// Gradually disperse into the air
 			if(0 < cell.mulch) // Mulching reduces evaporation of humidity.
@@ -294,10 +335,8 @@ FarmGame.prototype.harvest = function(cell){
 		return false; // Give up due to low working power
 	if(cell.harvest()){
 		this.workingPower -= workCost;
-		// Overgrown crops do not produce money but consumes working power to clean.
-		if(cell.corn < 3.0)
-			this.cash += 10;
-		cell.corn = 0;
+		this.cash += cell.crop.eval();
+		cell.crop = null;
 		cell.mulch = 0; // Harvesting discards mulch sheets
 		return true;
 	}
