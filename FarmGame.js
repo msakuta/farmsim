@@ -61,6 +61,14 @@ function FarmGame(xs,ys){
 		else
 			return false;
 	}
+	this.Cell.prototype.seedTuber = function(){
+		if(this.plowed && !this.crop){
+			this.crop = new FarmGame.Potato;
+			return true;
+		}
+		else
+			return false;
+	}
 	this.Cell.prototype.harvest = function(){
 		if(this.crop && 2 < this.crop.amount){
 			return true;
@@ -122,6 +130,20 @@ FarmGame.Corn = function(){
 }
 FarmGame.Corn.prototype = new FarmGame.Crop;
 
+FarmGame.Potato = function(){
+	FarmGame.Crop.apply(this, arguments);
+	this.type = "Potato";
+	this.amount = 1;
+}
+FarmGame.Potato.prototype = new FarmGame.Crop;
+
+FarmGame.Potato.prototype.eval = function(){
+	// Potatos yields a bit higher value than corn.
+	if(2.0 <= this.amount && this.amount < 3.0)
+		return 15;
+	else
+		return 0;
+}
 
 
 FarmGame.prototype.init = function(){
@@ -327,6 +349,25 @@ FarmGame.prototype.seed.description = function(){
 	return i18n.t("Apply crop seeds") + "\n"
 		+ i18n.t("Working Power Cost") + ": 10\n"
 		+ i18n.t("Money Cost") + ": $1";
+}
+
+FarmGame.prototype.seedTuber = function(cell){
+	var workCost = 10; // Seeding is not a hard physical task.
+	var moneyCost = 2;
+	if(this.workingPower < workCost || this.cash < moneyCost)
+		return false; // Give up due to low working power
+	if(cell.seedTuber()){
+		this.workingPower -= workCost;
+		this.cash -= moneyCost;
+		return true;
+	}
+	else
+		return false;
+}
+FarmGame.prototype.seedTuber.description = function(){
+	return i18n.t("Plant seed tubers of potatos") + "\n"
+		+ i18n.t("Working Power Cost") + ": 10\n"
+		+ i18n.t("Money Cost") + ": $2";
 }
 
 FarmGame.prototype.harvest = function(cell){

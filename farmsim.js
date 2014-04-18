@@ -15,6 +15,7 @@ var resources = {
 			"Select" : "選択",
 			"Plow" : "耕す",
 			"Seed" : "種まき",
+			"Tuber" : "種芋",
 			"Harvest" : "収穫",
 			"Water" : "水やり",
 			"Weed" : "除草",
@@ -22,6 +23,7 @@ var resources = {
 			"Selects a cell to inspect" : "セルを選択して調査",
 			"Plow and make ridges" : "耕して畝を作る",
 			"Apply crop seeds" : "作物の種を植える",
+			"Plant seed tubers of potatos" : "種芋を植える",
 			"Harvest and sell crops\nto gain money" : "作物を収穫して販売する",
 			"Water soil" : "土壌に水を撒く",
 			"Weed out without plowing\nSoil humidity is rather kept" : "耕さずに雑草を引き抜く\n土壌の水分は比較的維持される",
@@ -34,6 +36,7 @@ var resources = {
 			"Weeds" : "雑草",
 			"Plowed" : "畝立て",
 			"Corn" : "トウモロコシ",
+			"Potato" : "ジャガイモ",
 			"growth" : "生育",
 			"Humidity" : "湿度"
 		}
@@ -87,6 +90,17 @@ function init(){
 		PIXI.Texture.fromImage("assets/corn5.png"),
 	];
 	var cornThresholds = [
+		1.0, 1.25, 1.50, 1.75, 2.0, 3.0
+	];
+	var potatoTextures = [
+		PIXI.Texture.fromImage("assets/potato0.png"),
+		PIXI.Texture.fromImage("assets/potato1.png"),
+		PIXI.Texture.fromImage("assets/potato2.png"),
+		PIXI.Texture.fromImage("assets/potato3.png"),
+		PIXI.Texture.fromImage("assets/potato4.png"),
+		PIXI.Texture.fromImage("assets/potato5.png"),
+	];
+	var potatoThresholds = [
 		1.0, 1.25, 1.50, 1.75, 2.0, 3.0
 	];
 
@@ -176,22 +190,28 @@ function init(){
 			cell.weedsSprite = undefined;
 		}
 		var cornIndex = 0;
+		var textures = cornTextures;
+		var thresholds = cornThresholds;
 		if(cell.crop){
-			for(; cornIndex < cornTextures.length; cornIndex++){
-				if(cell.crop.amount < cornThresholds[cornIndex])
+			if(cell.crop.type == "Potato"){
+				textures = potatoTextures;
+				thresholds = potatoThresholds;
+			}
+			for(; cornIndex < textures.length; cornIndex++){
+				if(cell.crop.amount < thresholds[cornIndex])
 					break;
 			}
 		}
 		if(0 < cornIndex){
 			if(cell.cornSprite == undefined){
-				var cornSprite = new PIXI.Sprite(cornTextures[cornIndex - 1]);
+				var cornSprite = new PIXI.Sprite(textures[cornIndex - 1]);
 
 				cornSprite.position = cell.gs.position;
 				cell.graphics.addChild(cornSprite);
 				cell.cornSprite = cornSprite;
 			}
 			else
-				cell.cornSprite.setTexture(cornTextures[cornIndex - 1]);
+				cell.cornSprite.setTexture(textures[cornIndex - 1]);
 		}
 		else if(cell.cornSprite != undefined){
 			cell.graphics.removeChild(cell.cornSprite);
@@ -361,6 +381,7 @@ function init(){
 
 	overlay.addChild(new Button("assets/plow.png", i18n.t("Plow"), FarmGame.prototype.plow, false));
 	overlay.addChild(new Button("assets/seed.png", i18n.t("Seed"), FarmGame.prototype.seed, false));
+	overlay.addChild(new Button("assets/potatoSeed.png", i18n.t("Tuber"), FarmGame.prototype.seedTuber, false));
 	overlay.addChild(new Button("assets/harvest.png", i18n.t("Harvest"), FarmGame.prototype.harvest, false));
 	overlay.addChild(new Button("assets/water.png", i18n.t("Water"), FarmGame.prototype.water, false));
 	overlay.addChild(new Button("assets/weeding.png", i18n.t("Weed"), FarmGame.prototype.weeding, false));
