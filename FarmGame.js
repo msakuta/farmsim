@@ -20,6 +20,7 @@ FarmGame.Cell = function(weeds){
 	this.crop = null;
 	this.humidity = 0.5;
 	this.mulch = 0;
+	this.potatoPest = 0;
 }
 FarmGame.Cell.prototype.serialize = function(){
 	var v = this;
@@ -30,6 +31,7 @@ FarmGame.Cell.prototype.serialize = function(){
 		crop: this.crop ? this.crop.serialize() : null,
 		humidity: this.humidity,
 		mulch: this.mulch,
+		potatoPest: this.potatoPest,
 	};
 }
 FarmGame.Cell.prototype.deserialize = function(data){
@@ -45,6 +47,7 @@ FarmGame.Cell.prototype.deserialize = function(data){
 	}
 	this.humidity = data.humidity;
 	this.mulch = data.mulch;
+	this.potatoPest = data.potatoPest;
 }
 FarmGame.Cell.prototype.plow = function(){
 	var ret = !this.plowed || this.weeds != 0;
@@ -52,6 +55,7 @@ FarmGame.Cell.prototype.plow = function(){
 	this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
 	this.plowed = true;
 	this.humidity /= 2; // Plowing soil releases humidity inside it.
+	this.potatoPest *= 0.5;
 	return ret;
 }
 FarmGame.Cell.prototype.seed = function(){
@@ -88,6 +92,7 @@ FarmGame.Cell.prototype.weeding = function(){
 	this.weeds = 0;
 	this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
 	this.humidity *= 0.75; // Humidity is rather kept compared to plowing.
+	this.potatoPest *= 0.75;
 	return true;
 }
 FarmGame.Cell.prototype.mulching = function(){
@@ -110,7 +115,7 @@ FarmGame.Crop.prototype.deserialize = function(data){
 	this.amount = data.amount;
 }
 
-FarmGame.Crop.prototype.grow = function(growth){
+FarmGame.Crop.prototype.grow = function(cell,growth){
 	this.amount += growth;
 }
 
@@ -122,6 +127,10 @@ FarmGame.Crop.prototype.eval = function(){
 		return 0;
 }
 
+FarmGame.Crop.prototype.getQuality = function(){
+	return 1;
+}
+
 
 FarmGame.Corn = function(){
 	FarmGame.Crop.apply(this, arguments);
@@ -130,19 +139,40 @@ FarmGame.Corn = function(){
 }
 FarmGame.Corn.prototype = new FarmGame.Crop;
 
+FarmGame.Corn.prototype.grow = function(cell,growth){
+	this.amount += growth;
+	this.potatoPest = Math.max(0, this.potatoPest - growth); // Corn cleans soil to decrease potato pest.
+}
+
 FarmGame.Potato = function(){
 	FarmGame.Crop.apply(this, arguments);
 	this.type = "Potato";
 	this.amount = 1;
+	this.quality = 1;
 }
 FarmGame.Potato.prototype = new FarmGame.Crop;
+
+FarmGame.Potato.prototype.deserialize = function(data){
+	FarmGame.Crop.prototype.deserialize.apply(this,arguments);
+	this.quality = data.quality;
+}
+
+FarmGame.Potato.prototype.grow = function(cell,growth){
+	this.amount += growth;
+	this.quality *= 1. - cell.potatoPest * 0.0002;
+	cell.potatoPest = Math.min(1, cell.potatoPest + this.amount * 0.0001);
+}
 
 FarmGame.Potato.prototype.eval = function(){
 	// Potatos yields a bit higher value than corn.
 	if(2.0 <= this.amount && this.amount < 3.0)
-		return 15;
+		return 20 * this.quality; // Degraded potatoes sell with a lower price
 	else
 		return 0;
+}
+
+FarmGame.Potato.prototype.getQuality = function(){
+	return this.quality;
 }
 
 
@@ -222,11 +252,11 @@ FarmGame.prototype.updateInternal = function(){
 			else
 				cell.weedRoots = 1.;
 
-			// Increase corn growth.  Lower growth if there are weeds.
+			// Increase crop growth.  Lower growth if there are weeds.
 			// If the corn grow enough, it will degrade no matter how weeds are grown, but it
 			// still depends on humidity (wet crops rot faster).
 			if(cell.crop)
-				cell.crop.grow(0.0005 * (cell.crop.amount < 2 ? 1. - cell.weeds : 1.)
+				cell.crop.grow(cell, 0.0005 * (cell.crop.amount < 2 ? 1. - cell.weeds : 1.)
 					* humidityGrowth(cell)); // Humid soil grows crop better
 
 			// Gradually disperse into the air
@@ -234,6 +264,9 @@ FarmGame.prototype.updateInternal = function(){
 				cell.humidity *= 0.99995;
 			else
 				cell.humidity *= 0.9999;
+
+			// Potato pest gradually decreases if there is no potato crop.
+			cell.potatoPest *= 0.9999;
 
 			game.onUpdateCell(cell,x,y);
 		}

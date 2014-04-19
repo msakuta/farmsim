@@ -37,7 +37,10 @@ var resources = {
 			"Plowed" : "畝立て",
 			"Corn" : "トウモロコシ",
 			"Potato" : "ジャガイモ",
+			"Potato Pest" : "イモ疫病",
 			"growth" : "生育",
+			"quality" : "品質",
+			"value" : "販価",
 			"Humidity" : "湿度"
 		}
 	}
@@ -237,7 +240,7 @@ function init(){
 	var statusPanelFrame = new PIXI.Graphics();
 	statusPanelFrame.beginFill(0x000000, 0.5);
 	statusPanelFrame.lineStyle(2, 0xffffff, 1);
-	statusPanelFrame.drawRect(0, 0, 120, 90);
+	statusPanelFrame.drawRect(0, 0, 120, 135);
 	statusPanel.addChild(statusPanelFrame);
 	var statusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	statusText.y = 5;
@@ -408,7 +411,10 @@ function init(){
 			+ i18n.t("Plowed") + ": " + (statusCell.plowed ? "Yes" : "No") + "\n"
 			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100) + "\n"
 			+ i18n.t("Mulch") + ": " + (statusCell.mulch ? "Yes" : "No") + "\n"
-			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("growth") + ": " + Math.floor(statusCell.crop.amount * 100) : ""));
+			+ i18n.t("Potato Pest") + ": " + Math.floor(100 * statusCell.potatoPest) + "\n"
+			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("growth") + ": " + Math.floor(statusCell.crop.amount * 100) : "") + "\n"
+			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("quality") + ": " + Math.floor(statusCell.crop.getQuality() * 100) : "") + "\n"
+			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("value") + ": " + Math.floor(statusCell.crop.eval()) : ""));
 
 		cursorSprite.x = statusCursor.x * 32;
 		cursorSprite.y = statusCursor.y * 32;
