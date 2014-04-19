@@ -193,7 +193,7 @@ function init(){
 	var statusPanelFrame = new PIXI.Graphics();
 	statusPanelFrame.beginFill(0x000000, 0.5);
 	statusPanelFrame.lineStyle(2, 0xffffff, 1);
-	statusPanelFrame.drawRect(0, 0, 120, 135);
+	statusPanelFrame.drawRect(0, 0, 120, 145);
 	statusPanel.addChild(statusPanelFrame);
 	var statusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	statusText.y = 5;
@@ -342,6 +342,7 @@ function init(){
 	overlay.addChild(new Button("assets/water.png", i18n.t("Water"), FarmGame.prototype.water, false));
 	overlay.addChild(new Button("assets/weeding.png", i18n.t("Weed"), FarmGame.prototype.weeding, false));
 	overlay.addChild(new Button("assets/mulch.png", i18n.t("Mulch"), FarmGame.prototype.mulching, false));
+	overlay.addChild(new Button("assets/fertilizer.png", i18n.t("Fertilize"), FarmGame.prototype.fertilize, false));
 
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
@@ -364,6 +365,7 @@ function init(){
 			+ i18n.t("Plowed") + ": " + (statusCell.plowed ? "Yes" : "No") + "\n"
 			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100) + "\n"
 			+ i18n.t("Mulch") + ": " + (statusCell.mulch ? "Yes" : "No") + "\n"
+			+ i18n.t("Fertility") + ": " + Math.floor(statusCell.fertility * 100) + "\n"
 			+ i18n.t("Potato Pest") + ": " + Math.floor(100 * statusCell.potatoPest) + "\n"
 			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("growth") + ": " + Math.floor(statusCell.crop.amount * 100) : "") + "\n"
 			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("quality") + ": " + Math.floor(statusCell.crop.getQuality() * 100) : "") + "\n"

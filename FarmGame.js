@@ -21,6 +21,7 @@ FarmGame.Cell = function(weeds){
 	this.humidity = 0.5;
 	this.mulch = 0;
 	this.potatoPest = 0;
+	this.fertility = 0.5;
 }
 FarmGame.Cell.prototype.serialize = function(){
 	var v = this;
@@ -32,6 +33,7 @@ FarmGame.Cell.prototype.serialize = function(){
 		humidity: this.humidity,
 		mulch: this.mulch,
 		potatoPest: this.potatoPest,
+		fertility: this.fertility,
 	};
 }
 FarmGame.Cell.prototype.deserialize = function(data){
@@ -48,6 +50,7 @@ FarmGame.Cell.prototype.deserialize = function(data){
 	this.humidity = data.humidity;
 	this.mulch = data.mulch;
 	this.potatoPest = data.potatoPest;
+	this.fertility = data.fertility;
 }
 FarmGame.Cell.prototype.plow = function(){
 	var ret = !this.plowed || this.weeds != 0;
@@ -101,6 +104,11 @@ FarmGame.Cell.prototype.mulching = function(){
 	this.mulch++;
 	return true;
 }
+FarmGame.Cell.prototype.fertilize = function(){
+	// Fertilizing soil makes fertility to approach 1 but never reach it.
+	this.fertility += (1. - this.fertility) * 0.75;
+	return true;
+}
 
 FarmGame.Crop = function(){
 	this.type = "";
@@ -142,6 +150,7 @@ FarmGame.Corn.prototype = new FarmGame.Crop;
 FarmGame.Corn.prototype.grow = function(cell,growth){
 	this.amount += growth;
 	this.potatoPest = Math.max(0, this.potatoPest - growth); // Corn cleans soil to decrease potato pest.
+	cell.fertility = Math.max(0, cell.fertility - growth); // Corn absorbs nutrition of soil to grow
 }
 
 FarmGame.Potato = function(){
@@ -161,6 +170,7 @@ FarmGame.Potato.prototype.grow = function(cell,growth){
 	this.amount += growth;
 	this.quality *= 1. - cell.potatoPest * 0.0002;
 	cell.potatoPest = Math.min(1, cell.potatoPest + this.amount * 0.0001);
+	cell.fertility = Math.max(0, cell.fertility - growth * 0.75); // Potato consumes relatively little nutrition
 }
 
 FarmGame.Potato.prototype.eval = function(){
@@ -235,6 +245,7 @@ FarmGame.prototype.updateInternal = function(){
 			// Obtain growth of weeds
 			var growth = (0.0001
 				+ getGrowth.call(this, cell, x, y, function(cell){return cell.weeds;}))
+					* cell.fertility
 					* 0.0001 * cell.weedRoots / (1. + cell.mulch * 2.); // Mulching reduces weed growth.
 
 			if(cell.weeds < 1. - growth)
@@ -256,7 +267,7 @@ FarmGame.prototype.updateInternal = function(){
 			// If the corn grow enough, it will degrade no matter how weeds are grown, but it
 			// still depends on humidity (wet crops rot faster).
 			if(cell.crop)
-				cell.crop.grow(cell, 0.0005 * (cell.crop.amount < 2 ? 1. - cell.weeds : 1.)
+				cell.crop.grow(cell, cell.fertility * 0.001 * (cell.crop.amount < 2 ? 1. - cell.weeds : 1.)
 					* humidityGrowth(cell)); // Humid soil grows crop better
 
 			// Gradually disperse into the air
@@ -267,6 +278,9 @@ FarmGame.prototype.updateInternal = function(){
 
 			// Potato pest gradually decreases if there is no potato crop.
 			cell.potatoPest *= 0.9999;
+
+			// Fertility increases slightly over time
+			cell.fertility = Math.min(1, cell.fertility + 0.0001);
 
 			game.onUpdateCell(cell,x,y);
 		}
@@ -472,6 +486,26 @@ FarmGame.prototype.mulching.description = function(){
 	return i18n.t("Mulch soil with plastic blanket\n"
 		+ "Keeps soil humidity") + "\n"
 		+ i18n.t("Working Power Cost") + ": 10\n"
+		+ i18n.t("Money Cost") + ": $2";
+}
+
+FarmGame.prototype.fertilize = function(cell){
+	var workCost = 5; // Fertilizing is just sprinkling manure all over which require little physical work.
+	var moneyCost = 2; // but it costs money.
+	if(this.workingPower < workCost || this.cash < moneyCost)
+		return false;
+	if(cell.fertilize()){
+		this.workingPower -= workCost;
+		this.cash -= moneyCost;
+		return true;
+	}
+	else
+		return false;
+}
+FarmGame.prototype.fertilize.description = function(){
+	return i18n.t("Add organic fertilizer to soil\n"
+		+ "Helps crops grow") + "\n"
+		+ i18n.t("Working Power Cost") + ": 5\n"
 		+ i18n.t("Money Cost") + ": $2";
 }
 
