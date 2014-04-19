@@ -235,7 +235,7 @@ FarmGame.prototype.updateInternal = function(){
 			// Obtain growth of weeds
 			var growth = (0.0001
 				+ getGrowth.call(this, cell, x, y, function(cell){return cell.weeds;}))
-					* 0.0001 * cell.weedRoots / (1. + cell.mulch); // Mulching reduces weed growth.
+					* 0.0001 * cell.weedRoots / (1. + cell.mulch * 2.); // Mulching reduces weed growth.
 
 			if(cell.weeds < 1. - growth)
 				cell.weeds += growth;
@@ -261,9 +261,9 @@ FarmGame.prototype.updateInternal = function(){
 
 			// Gradually disperse into the air
 			if(0 < cell.mulch) // Mulching reduces evaporation of humidity.
-				cell.humidity *= 0.99995;
-			else
 				cell.humidity *= 0.9999;
+			else
+				cell.humidity *= 0.9995;
 
 			// Potato pest gradually decreases if there is no potato crop.
 			cell.potatoPest *= 0.9999;
