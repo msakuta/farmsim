@@ -11,90 +11,90 @@ function FarmGame(xs,ys){
 	this.time = 0;
 	this.frameCount = 0;
 	this.autosave_frame = 0;
+}
 
-	this.Cell = function(weeds){
-		this.weeds = weeds;
-		this.weedRoots = 0.5;
-		this.plowed = false;
-		this.crop = null;
-		this.humidity = 0.5;
-		this.mulch = 0;
+FarmGame.Cell = function(weeds){
+	this.weeds = weeds;
+	this.weedRoots = 0.5;
+	this.plowed = false;
+	this.crop = null;
+	this.humidity = 0.5;
+	this.mulch = 0;
+}
+FarmGame.Cell.prototype.serialize = function(){
+	var v = this;
+	return {
+		weeds: this.weeds,
+		weedRoots: this.weedRoots,
+		plowed: this.plowed,
+		crop: this.crop ? this.crop.serialize() : null,
+		humidity: this.humidity,
+		mulch: this.mulch,
+	};
+}
+FarmGame.Cell.prototype.deserialize = function(data){
+	this.weeds = data.weeds;
+	this.weedRoots = data.weedRoots;
+	this.plowed = data.plowed;
+	// Try to find the class name in FarmGame object.
+	if(data.crop && data.crop.type in FarmGame){
+		// If found, try to instantiate an instance of it.
+		this.crop = new FarmGame[data.crop.type];
+		if(this.crop)
+			this.crop.deserialize(data.crop);
 	}
-	this.Cell.prototype.serialize = function(){
-		var v = this;
-		return {
-			weeds: this.weeds,
-			weedRoots: this.weedRoots,
-			plowed: this.plowed,
-			crop: this.crop ? this.crop.serialize() : null,
-			humidity: this.humidity,
-			mulch: this.mulch,
-		};
-	}
-	this.Cell.prototype.deserialize = function(data){
-		this.weeds = data.weeds;
-		this.weedRoots = data.weedRoots;
-		this.plowed = data.plowed;
-		// Try to find the class name in FarmGame object.
-		if(data.crop && data.crop.type in FarmGame){
-			// If found, try to instantiate an instance of it.
-			this.crop = new FarmGame[data.crop.type];
-			if(this.crop)
-				this.crop.deserialize(data.crop);
-		}
-		this.humidity = data.humidity;
-		this.mulch = data.mulch;
-	}
-	this.Cell.prototype.plow = function(){
-		var ret = !this.plowed || this.weeds != 0;
-		this.weeds = 0;
-		this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
-		this.plowed = true;
-		this.humidity /= 2; // Plowing soil releases humidity inside it.
-		return ret;
-	}
-	this.Cell.prototype.seed = function(){
-		if(this.plowed && !this.crop){
-			this.crop = new FarmGame.Corn;
-			return true;
-		}
-		else
-			return false;
-	}
-	this.Cell.prototype.seedTuber = function(){
-		if(this.plowed && !this.crop){
-			this.crop = new FarmGame.Potato;
-			return true;
-		}
-		else
-			return false;
-	}
-	this.Cell.prototype.harvest = function(){
-		if(this.crop && 2 < this.crop.amount){
-			return true;
-		}
-		else
-			return false;
-	}
-	this.Cell.prototype.water = function(){
-		// Watering soil makes humidity to approach 1 but never reach it.
-		this.humidity += (1. - this.humidity) * 0.5;
+	this.humidity = data.humidity;
+	this.mulch = data.mulch;
+}
+FarmGame.Cell.prototype.plow = function(){
+	var ret = !this.plowed || this.weeds != 0;
+	this.weeds = 0;
+	this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
+	this.plowed = true;
+	this.humidity /= 2; // Plowing soil releases humidity inside it.
+	return ret;
+}
+FarmGame.Cell.prototype.seed = function(){
+	if(this.plowed && !this.crop){
+		this.crop = new FarmGame.Corn;
 		return true;
 	}
-	this.Cell.prototype.weeding = function(){
-		if(this.weeds == 0)
-			return false;
-		this.weeds = 0;
-		this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
-		this.humidity *= 0.75; // Humidity is rather kept compared to plowing.
+	else
+		return false;
+}
+FarmGame.Cell.prototype.seedTuber = function(){
+	if(this.plowed && !this.crop){
+		this.crop = new FarmGame.Potato;
 		return true;
 	}
-	this.Cell.prototype.mulching = function(){
-		if(0 < this.mulch)
-			return false;
-		this.mulch++;
+	else
+		return false;
+}
+FarmGame.Cell.prototype.harvest = function(){
+	if(this.crop && 2 < this.crop.amount){
 		return true;
 	}
+	else
+		return false;
+}
+FarmGame.Cell.prototype.water = function(){
+	// Watering soil makes humidity to approach 1 but never reach it.
+	this.humidity += (1. - this.humidity) * 0.5;
+	return true;
+}
+FarmGame.Cell.prototype.weeding = function(){
+	if(this.weeds == 0)
+		return false;
+	this.weeds = 0;
+	this.weedRoots *= 0.75; // You will have a hard time completely remove roots.
+	this.humidity *= 0.75; // Humidity is rather kept compared to plowing.
+	return true;
+}
+FarmGame.Cell.prototype.mulching = function(){
+	if(0 < this.mulch)
+		return false;
+	this.mulch++;
+	return true;
 }
 
 FarmGame.Crop = function(){
@@ -155,7 +155,7 @@ FarmGame.prototype.init = function(){
 			var row = [];
 			for(var y = 0; y < this.ys; y++){
 				var weeds = this.rng.next();
-				var cell = new this.Cell(weeds);
+				var cell = new FarmGame.Cell(weeds);
 
 				this.onUpdateCell(cell,x,y);
 
@@ -289,7 +289,7 @@ FarmGame.prototype.deserialize = function(stream){
 				var c = cells[x][y];
 				if(!c)
 					continue;
-				var cell = new this.Cell(c.weeds);
+				var cell = new FarmGame.Cell(c.weeds);
 				cell.deserialize(c);
 				row.push(cell);
 				this.onUpdateCell(cell,x,y);
@@ -302,7 +302,7 @@ FarmGame.prototype.deserialize = function(stream){
 			var row = [];
 			for(var y = 0; y < this.ys; y++){
 				var weeds = this.rng.next();
-				var cell = new this.Cell(weeds);
+				var cell = new FarmGame.Cell(weeds);
 
 				this.onUpdateCell(cell,x,y);
 
