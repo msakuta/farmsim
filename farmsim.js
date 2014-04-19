@@ -46,7 +46,7 @@ function init(){
 		PIXI.Texture.fromImage("assets/corn5.png"),
 	];
 	var cornThresholds = [
-		1.0, 1.25, 1.50, 1.75, 2.0, 3.0
+		0.0, 0.25, 0.50, 0.75, 1.0, 2.0
 	];
 	var potatoTextures = [
 		PIXI.Texture.fromImage("assets/potato0.png"),
@@ -57,7 +57,7 @@ function init(){
 		PIXI.Texture.fromImage("assets/potato5.png"),
 	];
 	var potatoThresholds = [
-		1.0, 1.25, 1.50, 1.75, 2.0, 3.0
+		0.0, 0.25, 0.50, 0.75, 1.0, 2.0
 	];
 
 	var ground = new PIXI.DisplayObjectContainer();

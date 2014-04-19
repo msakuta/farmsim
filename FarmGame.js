@@ -78,7 +78,7 @@ FarmGame.Cell.prototype.seedTuber = function(){
 		return false;
 }
 FarmGame.Cell.prototype.harvest = function(){
-	if(this.crop && 2 < this.crop.amount){
+	if(this.crop && 1 < this.crop.amount){
 		return true;
 	}
 	else
@@ -129,7 +129,7 @@ FarmGame.Crop.prototype.grow = function(cell,growth){
 
 FarmGame.Crop.prototype.eval = function(){
 	// Overgrown crops do not produce money but consumes working power to clean.
-	if(2.0 <= this.amount && this.amount < 3.0)
+	if(1.0 <= this.amount && this.amount < 2.0)
 		return 10;
 	else
 		return 0;
@@ -143,7 +143,7 @@ FarmGame.Crop.prototype.getQuality = function(){
 FarmGame.Corn = function(){
 	FarmGame.Crop.apply(this, arguments);
 	this.type = "Corn";
-	this.amount = 1;
+	this.amount = 0;
 }
 FarmGame.Corn.prototype = new FarmGame.Crop;
 
@@ -156,7 +156,7 @@ FarmGame.Corn.prototype.grow = function(cell,growth){
 FarmGame.Potato = function(){
 	FarmGame.Crop.apply(this, arguments);
 	this.type = "Potato";
-	this.amount = 1;
+	this.amount = 0;
 	this.quality = 1;
 }
 FarmGame.Potato.prototype = new FarmGame.Crop;
@@ -169,13 +169,13 @@ FarmGame.Potato.prototype.deserialize = function(data){
 FarmGame.Potato.prototype.grow = function(cell,growth){
 	this.amount += growth;
 	this.quality *= 1. - cell.potatoPest * 0.0002;
-	cell.potatoPest = Math.min(1, cell.potatoPest + this.amount * 0.0001);
+	cell.potatoPest = Math.min(1, cell.potatoPest + this.amount * 0.0002);
 	cell.fertility = Math.max(0, cell.fertility - growth * 0.75); // Potato consumes relatively little nutrition
 }
 
 FarmGame.Potato.prototype.eval = function(){
 	// Potatos yields a bit higher value than corn.
-	if(2.0 <= this.amount && this.amount < 3.0)
+	if(1.0 <= this.amount && this.amount < 2.0)
 		return 20 * this.quality; // Degraded potatoes sell with a lower price
 	else
 		return 0;
@@ -267,7 +267,7 @@ FarmGame.prototype.updateInternal = function(){
 			// If the corn grow enough, it will degrade no matter how weeds are grown, but it
 			// still depends on humidity (wet crops rot faster).
 			if(cell.crop)
-				cell.crop.grow(cell, cell.fertility * 0.001 * (cell.crop.amount < 2 ? 1. - cell.weeds : 1.)
+				cell.crop.grow(cell, cell.fertility * 0.001 * (cell.crop.amount < 1 ? 1. - cell.weeds : 1.)
 					* humidityGrowth(cell)); // Humid soil grows crop better
 
 			// Gradually disperse into the air
