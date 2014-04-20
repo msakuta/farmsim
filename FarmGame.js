@@ -8,6 +8,7 @@ function FarmGame(xs,ys){
 
 	this.workingPower = 100;
 	this.cash = 100;
+	this.weather = 0;
 	this.time = 0;
 	this.frameCount = 0;
 	this.autosave_frame = 0;
@@ -221,11 +222,45 @@ FarmGame.prototype.update = function(deltaTime){
 	}
 }
 
+/// Simple random number generator.
+function RandomSequence(seed){
+	this.z = (seed & 0xffffffff) + 0x7fffffff;
+	this.w = (((this.z ^ 123459876) * 123459871) & 0xffffffff) + 0x7fffffff;
+}
+
+RandomSequence.prototype.nexti = function(){
+	return ((((this.z=36969*(this.z&65535)+(this.z>>16))<<16)+(this.w=18000*(this.w&65535)+(this.w>>16))) & 0xffffffff) + 0x7fffffff;
+}
+
+RandomSequence.prototype.next = function(){
+	return this.nexti() / 0xffffffff;
+}
+
+/// Noise with a low frequency which is realized by interpolating polygon chart.
+function smoothNoise(i){
+	var seed = 123;
+	var period = 600; // one minute
+	var sum = 0.;
+	for(var j = 0; j <= 1; j++){
+		var rng = new RandomSequence(Math.floor(i / period) + j);
+		var value = rng.next(rng);
+		// Uniformly distributed random variable is squared to make rainy weather have lower probability.
+		sum += value * value * (j ? i % period : period - i % period) / period;
+	}
+	return sum;
+}
+
 FarmGame.prototype.updateInternal = function(){
 
 	// Humidity coefficient of growth for crops and weeds
 	function humidityGrowth(cell){
 		return (cell.humidity + 0.25) / 1.25;
+	}
+
+	// Weather based grow speed modifier.
+	// Crops grow better when it's sunny, but don't forget to supply sufficient water.
+	function sunlightGrowth(game,cell){
+		return (1. - game.weather + 0.25) / 1.25;
 	}
 
 	// The growth of the grass depends on adjacent cells' grass density.
@@ -235,8 +270,10 @@ FarmGame.prototype.updateInternal = function(){
 		if(x + 1 < this.xs) ret += getter(this.cells[x + 1][y]);
 		if(0 <= y - 1) ret += getter(this.cells[x][y - 1]);
 		if(y + 1 < this.ys) ret += getter(this.cells[x][y + 1]);
-		return ret * humidityGrowth(cell);
+		return ret * humidityGrowth(cell) * sunlightGrowth(this,cell);
 	}
+
+	this.weather = smoothNoise(this.frameCount);
 
 	for(var x = 0; x < this.cells.length; x++){
 		for(var y = 0; y < this.cells[x].length; y++){
@@ -268,13 +305,11 @@ FarmGame.prototype.updateInternal = function(){
 			// still depends on humidity (wet crops rot faster).
 			if(cell.crop)
 				cell.crop.grow(cell, cell.fertility * 0.001 * (cell.crop.amount < 1 ? 1. - cell.weeds : 1.)
-					* humidityGrowth(cell)); // Humid soil grows crop better
+					* humidityGrowth(cell) * sunlightGrowth(this,cell)); // Humid soil grows crop better
 
-			// Gradually disperse into the air
-			if(0 < cell.mulch) // Mulching reduces evaporation of humidity.
-				cell.humidity *= 0.9999;
-			else
-				cell.humidity *= 0.9995;
+			// Humidity of soil gradually disperse into the air.  Soil humidity gradually approaches air moisture.
+			// Mulching reduces evaporation of humidity.
+			cell.humidity += (game.weather - cell.humidity) * (0 < cell.mulch ? 0.0001 : 0.0005);
 
 			// Potato pest gradually decreases if there is no potato crop.
 			cell.potatoPest *= 0.9999;
@@ -307,7 +342,8 @@ FarmGame.prototype.updateInternal = function(){
 }
 
 FarmGame.prototype.serialize = function(){
-	var saveData = {workingPower: this.workingPower, cash: this.cash, xs: this.xs, ys: this.ys};
+	var saveData = {workingPower: this.workingPower, cash: this.cash,
+		frameCount: this.frameCount, xs: this.xs, ys: this.ys};
 	var cells = [];
 	for(var x = 0; x < this.cells.length; x++){
 		var row = [];
@@ -326,6 +362,7 @@ FarmGame.prototype.deserialize = function(stream){
 	if(data != null){
 		this.workingPower = data.workingPower;
 		this.cash = data.cash;
+		this.autosave_frame = this.frameCount = data.frameCount;
 		this.xs = data.xs;
 		this.ys = data.ys;
 		this.cells = [];

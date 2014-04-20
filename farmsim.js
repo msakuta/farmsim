@@ -227,7 +227,7 @@ function init(){
 	var gstatusPanelFrame = new PIXI.Graphics();
 	gstatusPanelFrame.beginFill(0x000000, 0.5);
 	gstatusPanelFrame.lineStyle(2, 0xffffff, 1);
-	gstatusPanelFrame.drawRect(0, 0, 120, 55);
+	gstatusPanelFrame.drawRect(0, 0, 120, 75);
 	gstatusPanel.addChild(gstatusPanelFrame);
 	var gstatusText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
 	gstatusText.y = 5;
@@ -239,8 +239,26 @@ function init(){
 	gstatusCashText.x = 5;
 	gstatusCashText.y = 30;
 	gstatusPanel.addChild(gstatusCashText);
+	gstatusWeatherText = new PIXI.Text("", {font: "10px Helvetica", fill: "#ffffff"});
+	gstatusWeatherText.x = 5;
+	gstatusWeatherText.y = 45;
+	gstatusPanel.addChild(gstatusWeatherText);
+	var weatherIcons = [
+		{caption: i18n.t("Sunny"), texture: PIXI.Texture.fromImage("assets/sunny.png")},
+		{caption: i18n.t("Partly cloudy"), texture: PIXI.Texture.fromImage("assets/partlycloudy.png")},
+		{caption: i18n.t("Cloudy"), texture: PIXI.Texture.fromImage("assets/cloudy.png")},
+		{caption: i18n.t("Rainy"), texture: PIXI.Texture.fromImage("assets/rainy.png")}
+	];
+	var weatherSprites = [];
+	for(var i = 0; i < weatherIcons.length; i++){
+		var sprite = new PIXI.Sprite(weatherIcons[i].texture);
+		sprite.x = 80;
+		sprite.y = 40;
+		weatherSprites.push(sprite);
+		gstatusPanel.addChild(sprite);
+	}
 	gstatusPanel.x = 10;
-	gstatusPanel.y = height - 65;
+	gstatusPanel.y = height - 85;
 	overlay.addChild(gstatusPanel);
 
 	var buttonTip = new PIXI.DisplayObjectContainer();
@@ -378,6 +396,10 @@ function init(){
 		gstatusText.setText(i18n.t("Working Power") + ": " + Math.floor(game.workingPower));
 		gstatusWPBar.setFactor(game.workingPower / 100);
 		gstatusCashText.setText(i18n.t("Cash") + ": $" + Math.floor(game.cash));
+		gstatusWeatherText.setText(i18n.t("Weather") + ": (" + Math.floor(game.weather * 100) + ")\n"
+			+ weatherIcons[Math.floor(game.weather * weatherIcons.length)].caption);
+		for(var i = 0; i < weatherSprites.length; i++)
+			weatherSprites[i].visible = i / weatherSprites.length <= game.weather && game.weather < (i+1) / weatherSprites.length;
 
 		renderer.render(stage);
 
