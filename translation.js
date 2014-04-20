@@ -45,6 +45,10 @@ var resources = {
 			"quality" : "品質",
 			"value" : "販価",
 			"Humidity" : "湿度"
+		},
+		buttonFont : {
+			"Corn" : "10px MS Gothic",
+			"Potato" : "10px MS Gothic"
 		}
 	}
 }

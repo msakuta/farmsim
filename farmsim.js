@@ -314,7 +314,8 @@ function init(){
 		// Button caption text
 		this.text = null;
 		if(caption){
-			this.text = new PIXI.Text(caption, {font: "15px Helvetica", fill: "#ffffff"});
+			this.font = i18n.exists("buttonFont:" + caption) ? i18n.t("buttonFont:" + caption) :  "15px Helvetica";
+			this.text = new PIXI.Text(i18n.t(caption), {font: this.font, fill: "#ffffff"});
 			this.text.x = 40;
 			this.text.y = 12;
 			this.addChild(this.text);
@@ -326,7 +327,7 @@ function init(){
 	Button.prototype.setActive = function(active){
 		this.frame.visible = active;
 		if(this.text)
-			this.text.setStyle({font: "15px Helvetica", fill: active ? "#ffffff" : "#afafaf"});
+			this.text.setStyle({font: this.font, fill: active ? "#ffffff" : "#afafaf"});
 	}
 
 	var clickCallback = FarmGame.prototype.select;
@@ -335,14 +336,14 @@ function init(){
 	selectButton.y = 10;
 	overlay.addChild(selectButton);
 
-	overlay.addChild(new Button("assets/plow.png", i18n.t("Plow"), FarmGame.prototype.plow, false));
-	overlay.addChild(new Button("assets/seed.png", i18n.t("Seed"), FarmGame.prototype.seed, false));
-	overlay.addChild(new Button("assets/potatoSeed.png", i18n.t("Tuber"), FarmGame.prototype.seedTuber, false));
-	overlay.addChild(new Button("assets/harvest.png", i18n.t("Harvest"), FarmGame.prototype.harvest, false));
-	overlay.addChild(new Button("assets/water.png", i18n.t("Water"), FarmGame.prototype.water, false));
-	overlay.addChild(new Button("assets/weeding.png", i18n.t("Weed"), FarmGame.prototype.weeding, false));
-	overlay.addChild(new Button("assets/mulch.png", i18n.t("Mulch"), FarmGame.prototype.mulching, false));
-	overlay.addChild(new Button("assets/fertilizer.png", i18n.t("Fertilize"), FarmGame.prototype.fertilize, false));
+	overlay.addChild(new Button("assets/plow.png", "Plow", FarmGame.prototype.plow, false));
+	overlay.addChild(new Button("assets/seed.png", "Corn", FarmGame.prototype.seed, false));
+	overlay.addChild(new Button("assets/potatoSeed.png", "Potato", FarmGame.prototype.seedTuber, false));
+	overlay.addChild(new Button("assets/harvest.png", "Harvest", FarmGame.prototype.harvest, false));
+	overlay.addChild(new Button("assets/water.png", "Water", FarmGame.prototype.water, false));
+	overlay.addChild(new Button("assets/weeding.png", "Weed", FarmGame.prototype.weeding, false));
+	overlay.addChild(new Button("assets/mulch.png", "Mulch", FarmGame.prototype.mulching, false));
+	overlay.addChild(new Button("assets/fertilizer.png", "Fertilize", FarmGame.prototype.fertilize, false));
 
 	stage.addChild(overlay);
 	requestAnimationFrame(animate);
