@@ -309,7 +309,8 @@ FarmGame.prototype.updateInternal = function(){
 
 			// Humidity of soil gradually disperse into the air.  Soil humidity gradually approaches air moisture.
 			// Mulching reduces evaporation of humidity.
-			cell.humidity += (game.weather - cell.humidity) * (0 < cell.mulch ? 0.0001 : 0.0005);
+			cell.humidity += (0.75 < this.weather && cell.humidity < this.weather ? 10. * (1. - cell.humidity) : this.weather - cell.humidity) // Rain lifts up humidity rapidly.
+				* (0 < cell.mulch ? 0.0001 : 0.0005);
 
 			// Potato pest gradually decreases if there is no potato crop.
 			cell.potatoPest *= 0.9999;
