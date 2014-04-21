@@ -145,13 +145,33 @@ FarmGame.Corn = function(){
 	FarmGame.Crop.apply(this, arguments);
 	this.type = "Corn";
 	this.amount = 0;
+	this.quality = 1;
 }
 FarmGame.Corn.prototype = new FarmGame.Crop;
+
+FarmGame.Corn.prototype.deserialize = function(data){
+	FarmGame.Crop.prototype.deserialize.apply(this,arguments);
+	this.quality = data.quality;
+}
 
 FarmGame.Corn.prototype.grow = function(cell,growth){
 	this.amount += growth;
 	this.potatoPest = Math.max(0, this.potatoPest - growth); // Corn cleans soil to decrease potato pest.
+	// Too much humidity induce degradation of crops
+	this.quality *= 1. - cell.humidity * 0.0005;
 	cell.fertility = Math.max(0, cell.fertility - growth); // Corn absorbs nutrition of soil to grow
+}
+
+FarmGame.Corn.prototype.getQuality = function(){
+	return this.quality;
+}
+
+FarmGame.Corn.prototype.eval = function(){
+	// Potatos yields a bit higher value than corn.
+	if(1.0 <= this.amount && this.amount < 2.0)
+		return 10 * Math.min(1, this.quality / 0.75); // Degraded corns sell with a lower price
+	else
+		return 0;
 }
 
 FarmGame.Potato = function(){
@@ -169,7 +189,9 @@ FarmGame.Potato.prototype.deserialize = function(data){
 
 FarmGame.Potato.prototype.grow = function(cell,growth){
 	this.amount += growth;
-	this.quality *= 1. - cell.potatoPest * 0.0002;
+	this.quality *= 1. - cell.potatoPest * 0.0003;
+	// Too much humidity induce degradation of crops
+	this.quality *= 1. - cell.humidity * 0.0003;
 	cell.potatoPest = Math.min(1, cell.potatoPest + this.amount * 0.0002);
 	cell.fertility = Math.max(0, cell.fertility - growth * 0.75); // Potato consumes relatively little nutrition
 }
@@ -177,7 +199,7 @@ FarmGame.Potato.prototype.grow = function(cell,growth){
 FarmGame.Potato.prototype.eval = function(){
 	// Potatos yields a bit higher value than corn.
 	if(1.0 <= this.amount && this.amount < 2.0)
-		return 20 * this.quality; // Degraded potatoes sell with a lower price
+		return 20 * Math.min(1, this.quality / 0.75); // Degraded potatoes sell with a lower price
 	else
 		return 0;
 }
@@ -254,7 +276,8 @@ FarmGame.prototype.updateInternal = function(){
 
 	// Humidity coefficient of growth for crops and weeds
 	function humidityGrowth(cell){
-		return (cell.humidity + 0.25) / 1.25;
+		var h = (0.5 - cell.humidity) / 0.5;
+		return ((1. - h * h) + 0.25) / 1.25;
 	}
 
 	// Weather based grow speed modifier.
@@ -310,13 +333,13 @@ FarmGame.prototype.updateInternal = function(){
 			// Humidity of soil gradually disperse into the air.  Soil humidity gradually approaches air moisture.
 			// Mulching reduces evaporation of humidity.
 			cell.humidity += (0.75 < this.weather && cell.humidity < this.weather ? 10. * (1. - cell.humidity) : this.weather - cell.humidity) // Rain lifts up humidity rapidly.
-				* (0 < cell.mulch ? 0.0001 : 0.0005);
+				* (0 < cell.mulch ? 0.0002 : 0.0010);
 
 			// Potato pest gradually decreases if there is no potato crop.
 			cell.potatoPest *= 0.9999;
 
 			// Fertility increases slightly over time
-			cell.fertility = Math.min(1, cell.fertility + 0.0001);
+			cell.fertility = Math.min(1, cell.fertility + 0.00005);
 
 			game.onUpdateCell(cell,x,y);
 		}
