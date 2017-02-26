@@ -8,13 +8,14 @@
 	<script type="text/javascript" src="FarmGame.js"></script>
 	<script type="text/javascript" src="i18next-1.7.2.js"></script>
 	<script type="text/javascript" src="translation.js"></script>
-	<script type="text/javascript" src="farmsim.js"></script>
+	<!--script type="text/javascript" src="farmsim.js"></script-->
+	<script type="text/javascript" src="farmsimDiv.js"></script>
 </head>
 <body>
 <div id="header">
 	<h1>Farm Simulator Game Test</h1>
 </div>
-<div id="stage"></div>
+<div id="container"></div>
 	Auto Save Content: <input id="autoSaveText" type="text" value=""></input><br>
 	<input type="button" value="get state" onclick="document.getElementById('saveText').value = game.serialize()"></input>
 	<input id="saveText" type="text" value=""></input>

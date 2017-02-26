@@ -341,7 +341,7 @@ FarmGame.prototype.updateInternal = function(){
 			// Fertility increases slightly over time
 			cell.fertility = Math.min(1, cell.fertility + 0.00005);
 
-			game.onUpdateCell(cell,x,y);
+			this.onUpdateCell(cell,x,y);
 		}
 	}
 
