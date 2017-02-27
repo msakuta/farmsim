@@ -14,6 +14,10 @@ var width;
 var height;
 var cursorElem;
 
+var toolBarElem;
+var toolElems = [];
+var toolCursorElem;
+
 // Constants
 var tilesize = 32;
 
@@ -27,6 +31,13 @@ var weedsThresholds = [
 	0.25, 0.50, 0.75
 ];
 
+var toolDefs = [
+	{img: 'assets/plow.png', caption: 'Plow', click: 'plow'},
+	{img: 'assets/seed.png', caption: 'Corn', click: 'seed'},
+];
+
+var currentTool = -1;
+
 
 window.addEventListener('load', function(){
 	width = 640;
@@ -38,12 +49,23 @@ window.addEventListener('load', function(){
 	init();
 });
 
+function coordOfElem(elem){
+	var idx = tileElems.indexOf(elem);
+	if(0 <= idx)
+		return [ idx % viewPortWidth - scrollPos[0], Math.floor(idx / viewPortWidth) - scrollPos[1]];
+	else
+		return null;
+}
+
 function elemAt(x, y){
 	if(x instanceof Array){
 		y = x[1];
 		x = x[0];
 	}
-	return tileElems[x + y * viewPortWidth];
+	if(0 <= x && x < viewPortWidth && 0 <= y && y < viewPortHeight)
+		return tileElems[x + y * viewPortWidth];
+	else
+		return null;
 }
 
 function init(){
@@ -57,9 +79,6 @@ function init(){
 		}
 
 		if(cell.elem){
-			// Remove the children first, because old nodes may be present
-//			while(cell.elem.firstChild)
-//				cell.elem.removeChild(cell.elem.firstChild);
 			for(var weedsIndex = 0; weedsIndex < weedsTextures.length; weedsIndex++){
 				if(cell.weeds < weedsThresholds[weedsIndex])
 					break;
@@ -77,9 +96,11 @@ function init(){
 					cell.weedsSprite.style.backgroundImage = weedsTextures[weedsIndex - 1];
 			}
 			else if(cell.weedsSprite !== undefined){
-				cell.graphics.removeChild(cell.weedsSprite);
+				cell.elem.removeChild(cell.weedsSprite);
 				cell.weedsSprite = undefined;
 			}
+
+			cell.elem.style.backgroundImage = cell.plowed ? 'url(assets/ridge.png)' : 'url(assets/dirt.png)';
 		}
 	};
 
@@ -144,8 +165,8 @@ function createElements(){
 	outerContainer.appendChild(container);
 	if(cursorElem)
 		cursorElem = null;
-//	if(toolCursorElem)
-//		toolCursorElem = null;
+	if(toolCursorElem)
+		toolCursorElem = null;
 
 	table = document.createElement("div");
 	table.style.borderStyle = 'solid';
@@ -176,6 +197,14 @@ function createElements(){
 			tileElem.style.left = (tilesize * ix) + 'px';
 			tileElem.style.backgroundImage = "url(assets/dirt.png)";
 			tileElem.onmousedown = function(e){
+				var idx = tileElems.indexOf(this);
+				var xy = coordOfElem(this);
+				var cell = game.cells[xy[0]][xy[1]];
+				if(cell && 0 <= currentTool && currentTool < toolDefs.length){
+					var methodName = toolDefs[currentTool].click;
+					if(methodName in game)
+						game[methodName](cell);
+				}
 			}
 
 			tileElem.onmousemove = function(){
@@ -185,6 +214,81 @@ function createElements(){
 			table.appendChild(tileElem);
 		}
 	}
+
+
+	var toolBarMargin = 4;
+
+	function selectTool(idx){
+		// Selecting the same tool twice means deselecting
+		if(currentTool === idx)
+			idx = -1;
+		for(var i = 0; i < toolElems.length; i++)
+			toolElems[i].style.backgroundColor = '#7f7fff';
+		if(0 <= idx && idx < toolElems.length)
+			toolElems[idx].style.backgroundColor = '#00ffff';
+		currentTool = idx;
+		if(0 <= currentTool){
+			if(!toolCursorElem){
+				toolCursorElem = document.createElement('div');
+				toolCursorElem.style.border = '2px blue solid';
+				toolCursorElem.style.pointerEvents = 'none';
+				toolBarElem.appendChild(toolCursorElem);
+			}
+			toolCursorElem.style.position = 'absolute';
+			toolCursorElem.style.top = (currentTool * (tilesize + toolBarMargin * 2) + toolBarMargin) + 'px';
+			toolCursorElem.style.left = (toolBarMargin) + 'px';
+			toolCursorElem.style.width = '126px';
+			toolCursorElem.style.height = '30px';
+			toolCursorElem.style.display = 'block';
+		}
+		else if(toolCursorElem)
+			toolCursorElem.style.display = 'none';
+	}
+
+	// Reset the state before initializing toolbar elements
+	toolElems = [];
+	currentTool = -1;
+//	currentRotation = 0;
+
+	// Tool bar
+	toolBarElem = document.createElement('div');
+	toolBarElem.style.borderStyle = 'solid';
+	toolBarElem.style.borderWidth = '1px';
+	toolBarElem.style.borderColor = 'red';
+	toolBarElem.style.position = 'absolute';
+	//toolBarElem.margin = toolBarMargin + 'px';
+	toolBarElem.style.top = '0px';
+	toolBarElem.style.left = (viewPortWidth * tilesize + 20) + 'px';
+	toolBarElem.style.width = (128 + toolBarMargin * 2 + 2) + 'px';
+	toolBarElem.style.height = ((toolDefs.length) * (tilesize + toolBarMargin * 2) + 2) + 'px';
+	container.appendChild(toolBarElem);
+	for(var i = 0; i < toolDefs.length; i++){
+		var toolElem = document.createElement('div');
+		toolElem.style.position = 'absolute';
+		toolElem.style.width = '128px';
+		toolElem.style.height = '32px';
+		toolElem.style.left = toolBarMargin + 'px';
+		toolElem.style.top = (i * (tilesize + toolBarMargin * 2) + toolBarMargin) + 'px';
+		toolElem.style.border = '1px solid red';
+		toolElem.style.backgroundColor = '#7f7fff';
+		toolElem.style.textAlign = 'middle';
+
+		var toolIcon = document.createElement('img');
+		toolIcon.src = toolDefs[i].img;
+		toolElem.appendChild(toolIcon);
+		var toolCaption = document.createElement('span');
+		toolCaption.innerHTML = toolDefs[i].caption;
+		toolCaption.setAttribute('class', 'noselect');
+		toolElem.appendChild(toolCaption);
+
+		toolElem.onclick = function(e){
+			selectTool(toolElems.indexOf(this));
+		};
+
+		toolBarElem.appendChild(toolElem);
+		toolElems.push(toolElem);
+	}
+
 }
 
 function selectTile(sel){
