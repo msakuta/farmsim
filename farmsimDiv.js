@@ -13,6 +13,7 @@ var viewPortHeight;
 var width;
 var height;
 var cursorElem;
+var infoElem;
 
 var toolBarElem;
 var toolElems = [];
@@ -119,6 +120,8 @@ function init(){
 		lastTime = timestamp;
 
 		game.update(deltaTime);
+
+		updateInfo();
 
 /*		var statusCell = game.cells[statusCursor.x][statusCursor.y];
 		statusText.setText(i18n.t("Pos") + ": " + statusCursor.x + ", " + statusCursor.y + "\n"
@@ -289,6 +292,17 @@ function createElements(){
 		toolElems.push(toolElem);
 	}
 
+	infoElem = document.createElement('div');
+	//infoElem.style.position = 'absolute';
+	infoElem.style.backgroundColor = '#ffff7f';
+	infoElem.style.border = '1px solid #00f';
+	infoElem.style.margin = '4px';
+	infoElem.style.padding = '2px';
+	infoElem.style.width = '256px';
+	infoElem.style.height = '12em';
+	infoElem.style.lineHeight = '120%';
+	container.appendChild(infoElem);
+
 }
 
 function selectTile(sel){
@@ -311,9 +325,43 @@ function selectTile(sel){
 		cursorElem.style.left = (tilesize * vx) + 'px';
 		cursorElem.style.width = '30px';
 		cursorElem.style.height = '30px';
-//		updateInfo();
+		updateInfo();
 //		updateInventory();
 	}
+
+}
+
+function updateInfo(){
+	if(!selectedCoords){
+		infoElem.innerHTML = 'Empty tile';
+		return;
+	}
+	if(viewPortWidth <= selectedCoords[0] && viewPortHeight <= selectedCoords[1])
+		return;
+	var cell = game.cells[selectedCoords[0]][selectedCoords[1]];
+	if(!cell){
+		infoElem.innerHTML = 'Empty cell<br>';
+		return;
+	}
+
+	var crop = '';
+	if(cell.crop){
+		crop =
+			(cell.crop.type) + " " + ("growth") + ": " + Math.floor(cell.crop.amount * 100) + "<br>" +
+			(cell.crop.type) + " " + ("quality") + ": " + Math.floor(cell.crop.getQuality() * 100) + "<br>" +
+			(cell.crop.type) + " " + ("value") + ": " + Math.floor(cell.crop.eval());
+	}
+
+	infoElem.innerHTML = "Pos" + ": " + selectedCoords[0] + ", " + selectedCoords[1] + "<br>" +
+		"Weeds" + ": " + Math.floor(100 * cell.weeds) + " (" + Math.floor(100 * cell.weedRoots) + ")<br>" +
+		"Plowed" + ": " + (cell.plowed ? "Yes" : "No") + "<br>" +
+		"Humidity" + ": " + Math.floor(cell.humidity * 100) + "<br>" +
+		"Mulch" + ": " + (cell.mulch ? "Yes" : "No") + "<br>" +
+		"Fertility" + ": " + Math.floor(cell.fertility * 100) + "<br>" +
+		"Potato Pest" + ": " + Math.floor(100 * cell.potatoPest) + "<br>" +
+		crop;
+;
+;
 }
 
 
