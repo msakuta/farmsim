@@ -1,6 +1,12 @@
 /// Farm simulator implementation without PIXI.js (only with div and style)
 var FarmsimDiv = new (function(){
 'use strict';
+
+// Obtain the browser's preferred language.
+var currentLanguage = (window.navigator.language || window.navigator.userLanguage || window.navigator.userLanguage).substr(0, 2);
+
+i18n.init({lng: currentLanguage, fallbackLng: 'en', resStore: resources, getAsync: false});
+
 var game;
 var container;
 var table;
@@ -18,8 +24,23 @@ var infoElem;
 var toolBarElem;
 var toolElems = [];
 
+var gstatusText;
+var gstatusWPBar;
+var gstatusCashText;
+var gstatusWeatherText;
+
 // Constants
 var tilesize = 32;
+var statusBarWidth = 200;
+
+
+var weatherIcons = [
+	{caption: i18n.t("Sunny"), texture: "url(assets/sunny.png)"},
+	{caption: i18n.t("Partly cloudy"), texture: "url(assets/partlycloudy.png)"},
+	{caption: i18n.t("Cloudy"), texture: "url(assets/cloudy.png)"},
+	{caption: i18n.t("Rainy"), texture: "url(assets/rainy.png)"}
+];
+var weatherSprites = [];
 
 var weedsTextures = [
 	"url(assets/weeds1.png)",
@@ -32,14 +53,14 @@ var weedsThresholds = [
 ];
 
 var toolDefs = [
-	{img: 'assets/plow.png', caption: 'Plow', click: 'plow'},
-	{img: 'assets/seed.png', caption: 'Corn', click: 'seed'},
-	{img: 'assets/potatoSeed.png', caption: 'Potato', click: 'seedTuber'},
-	{img: 'assets/harvest.png', caption: 'Harvest', click: 'harvest'},
-	{img: 'assets/water.png', caption: 'Water', click: 'water'},
-	{img: 'assets/weeding.png', caption: 'Weed', click: 'weeding'},
-	{img: 'assets/mulch.png', caption: 'Mulch', click: 'mulching'},
-	{img: 'assets/fertilizer.png', caption: 'Fertilize', click: 'fertilize'},
+	{img: 'assets/plow.png', caption: i18n.t('Plow'), click: 'plow'},
+	{img: 'assets/seed.png', caption: i18n.t('Corn'), click: 'seed'},
+	{img: 'assets/potatoSeed.png', caption: i18n.t('Potato'), click: 'seedTuber'},
+	{img: 'assets/harvest.png', caption: i18n.t('Harvest'), click: 'harvest'},
+	{img: 'assets/water.png', caption: i18n.t('Water'), click: 'water'},
+	{img: 'assets/weeding.png', caption: i18n.t('Weed'), click: 'weeding'},
+	{img: 'assets/mulch.png', caption: i18n.t('Mulch'), click: 'mulching'},
+	{img: 'assets/fertilizer.png', caption: i18n.t('Fertilize'), click: 'fertilize'},
 ];
 
 var currentTool = -1;
@@ -76,6 +97,10 @@ function elemAt(x, y){
 
 function init(){
 	game = new FarmGame(width / 32, height / 32);
+
+	game.onAutoSave = function(str){
+		document.getElementById('autoSaveText').value = str;
+	}
 
 	generateBoard();
 
@@ -184,31 +209,14 @@ function init(){
 
 		updateInfo();
 
-/*		var statusCell = game.cells[statusCursor.x][statusCursor.y];
-		statusText.setText(i18n.t("Pos") + ": " + statusCursor.x + ", " + statusCursor.y + "\n"
-			+ i18n.t("Weeds") + ": " + Math.floor(100 * statusCell.weeds) + " (" + Math.floor(100 * statusCell.weedRoots) + ")\n"
-			+ i18n.t("Plowed") + ": " + (statusCell.plowed ? "Yes" : "No") + "\n"
-			+ i18n.t("Humidity") + ": " + Math.floor(statusCell.humidity * 100) + "\n"
-			+ i18n.t("Mulch") + ": " + (statusCell.mulch ? "Yes" : "No") + "\n"
-			+ i18n.t("Fertility") + ": " + Math.floor(statusCell.fertility * 100) + "\n"
-			+ i18n.t("Potato Pest") + ": " + Math.floor(100 * statusCell.potatoPest) + "\n"
-			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("growth") + ": " + Math.floor(statusCell.crop.amount * 100) : "") + "\n"
-			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("quality") + ": " + Math.floor(statusCell.crop.getQuality() * 100) : "") + "\n"
-			+ (statusCell.crop ? i18n.t(statusCell.crop.type) + " " + i18n.t("value") + ": " + Math.floor(statusCell.crop.eval()) : ""));*/
-
-//		cursorSprite.x = statusCursor.x * 32;
-//		cursorSprite.y = statusCursor.y * 32;
-
-/*		gstatusText.setText(i18n.t("Working Power") + ": " + Math.floor(game.workingPower));
-		gstatusWPBar.setFactor(game.workingPower / 100);
-		gstatusCashText.setText(i18n.t("Cash") + ": $" + Math.floor(game.cash));
-		gstatusWeatherText.setText(i18n.t("Weather") + ": (" + Math.floor(game.weather * 100) + ")\n"
-			+ weatherIcons[Math.floor(game.weather * weatherIcons.length)].caption);
+		gstatusText.innerHTML = i18n.t("Working Power") + ": " + Math.floor(game.workingPower);
+		gstatusWPBar.style.width = (game.workingPower / 100) * statusBarWidth + 'px';
+		gstatusCashText.innerHTML = i18n.t("Cash") + ": $" + Math.floor(game.cash);
+		gstatusWeatherText.innerHTML = i18n.t("Weather") + ": (" + Math.floor(game.weather * 100) + ")<br>"
+			+ weatherIcons[Math.floor(game.weather * weatherIcons.length)].caption;
 		for(var i = 0; i < weatherSprites.length; i++)
-			weatherSprites[i].visible = i / weatherSprites.length <= game.weather && game.weather < (i+1) / weatherSprites.length;
+			weatherSprites[i].style.display = i / weatherSprites.length <= game.weather && game.weather < (i+1) / weatherSprites.length ? 'block' : 'none';
 
-		renderer.render(stage);
-*/
 		requestAnimationFrame(animate);
 	}
 }
@@ -341,17 +349,75 @@ function createElements(){
 		toolElems.push(toolElem);
 	}
 
+	var bottomPanel = document.createElement('div');
+	bottomPanel.style.margin = '4px';
+	bottomPanel.style.position = 'relative';
+	bottomPanel.style.height = '13em';
+	container.appendChild(bottomPanel);
+
 	infoElem = document.createElement('div');
-	//infoElem.style.position = 'absolute';
 	infoElem.style.backgroundColor = '#ffff7f';
 	infoElem.style.border = '1px solid #00f';
-	infoElem.style.margin = '4px';
 	infoElem.style.padding = '2px';
+	infoElem.style.position = 'absolute';
+	infoElem.style.left = '0px';
+	infoElem.style.top = '0px';
 	infoElem.style.width = '256px';
 	infoElem.style.height = '12em';
 	infoElem.style.lineHeight = '120%';
-	container.appendChild(infoElem);
+	bottomPanel.appendChild(infoElem);
 
+	// The global status panel shows information about the player and other global things.
+	var gstatusPanel = document.createElement('div');
+	gstatusPanel.style.backgroundColor = '#ffffaf';
+	gstatusPanel.style.border = '1px solid #00f';
+	gstatusPanel.style.padding = '2px';
+	gstatusPanel.style.position = 'absolute';
+	gstatusPanel.style.left = '268px';
+	gstatusPanel.style.top = '0px';
+	gstatusPanel.style.width = '120px';
+	gstatusPanel.style.height = '75px';
+	gstatusPanel.style.lineHeight = '120%';
+	gstatusText = document.createElement('div');
+	gstatusText.style.fontFamily = 'Sans-serif';
+	gstatusText.style.left = '5px';
+	gstatusText.style.top = '5px';
+	gstatusPanel.appendChild(gstatusText);
+	var gstatusWPBarContainer = document.createElement('div');
+	gstatusPanel.appendChild(gstatusWPBarContainer);
+	gstatusWPBarContainer.style.backgroundColor = '#000';
+	gstatusWPBarContainer.style.border = '1px #7f7f7f solid';
+	gstatusWPBarContainer.style.width = statusBarWidth + 'px';
+	gstatusWPBarContainer.style.height = '8px';
+	gstatusWPBar = document.createElement('div');
+	gstatusWPBarContainer.appendChild(gstatusWPBar);
+	gstatusWPBar.style.backgroundColor = '#f0f';
+	gstatusWPBar.style.width = statusBarWidth + 'px';
+	gstatusWPBar.style.height = '8px';
+	gstatusWPBarContainer.appendChild(gstatusWPBar);
+	gstatusCashText = document.createElement('div');
+	gstatusCashText.style.fontFamily = 'Sans-serif';
+	gstatusCashText.style.left = '5px';
+	gstatusCashText.style.top = '30px';
+	gstatusPanel.appendChild(gstatusCashText);
+	gstatusWeatherText = document.createElement('div');
+	gstatusWeatherText.style.fontFamily = 'Sans-serif';
+	gstatusWeatherText.style.left = '5px';
+	gstatusWeatherText.style.top = '45px';
+	gstatusPanel.appendChild(gstatusWeatherText);
+	for(var i = 0; i < weatherIcons.length; i++){
+		var sprite = document.createElement('div');
+		sprite.style.backgroundImage = weatherIcons[i].texture;
+		sprite.style.left = '80px';
+		sprite.style.top = '40px';
+		sprite.style.width = '32px';
+		sprite.style.height = '32px';
+		weatherSprites.push(sprite);
+		gstatusPanel.appendChild(sprite);
+	}
+	gstatusPanel.style.width = '256px';
+	gstatusPanel.style.height = '12em';
+	bottomPanel.appendChild(gstatusPanel);
 }
 
 function selectTile(sel){
@@ -401,16 +467,14 @@ function updateInfo(){
 			(cell.crop.type) + " " + ("value") + ": " + Math.floor(cell.crop.eval());
 	}
 
-	infoElem.innerHTML = "Pos" + ": " + selectedCoords[0] + ", " + selectedCoords[1] + "<br>" +
-		"Weeds" + ": " + Math.floor(100 * cell.weeds) + " (" + Math.floor(100 * cell.weedRoots) + ")<br>" +
-		"Plowed" + ": " + (cell.plowed ? "Yes" : "No") + "<br>" +
-		"Humidity" + ": " + Math.floor(cell.humidity * 100) + "<br>" +
-		"Mulch" + ": " + (cell.mulch ? "Yes" : "No") + "<br>" +
-		"Fertility" + ": " + Math.floor(cell.fertility * 100) + "<br>" +
-		"Potato Pest" + ": " + Math.floor(100 * cell.potatoPest) + "<br>" +
+	infoElem.innerHTML = i18n.t("Pos") + ": " + selectedCoords[0] + ", " + selectedCoords[1] + "<br>" +
+		i18n.t("Weeds") + ": " + Math.floor(100 * cell.weeds) + " (" + Math.floor(100 * cell.weedRoots) + ")<br>" +
+		i18n.t("Plowed") + ": " + (cell.plowed ? "Yes" : "No") + "<br>" +
+		i18n.t("Humidity") + ": " + Math.floor(cell.humidity * 100) + "<br>" +
+		i18n.t("Mulch") + ": " + (cell.mulch ? "Yes" : "No") + "<br>" +
+		i18n.t("Fertility") + ": " + Math.floor(cell.fertility * 100) + "<br>" +
+		i18n.t("Potato Pest") + ": " + Math.floor(100 * cell.potatoPest) + "<br>" +
 		crop;
-;
-;
 }
 
 
