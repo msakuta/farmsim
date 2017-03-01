@@ -17,7 +17,6 @@ var infoElem;
 
 var toolBarElem;
 var toolElems = [];
-var toolCursorElem;
 
 // Constants
 var tilesize = 32;
@@ -35,6 +34,12 @@ var weedsThresholds = [
 var toolDefs = [
 	{img: 'assets/plow.png', caption: 'Plow', click: 'plow'},
 	{img: 'assets/seed.png', caption: 'Corn', click: 'seed'},
+	{img: 'assets/potatoSeed.png', caption: 'Potato', click: 'seedTuber'},
+	{img: 'assets/harvest.png', caption: 'Harvest', click: 'harvest'},
+	{img: 'assets/water.png', caption: 'Water', click: 'water'},
+	{img: 'assets/weeding.png', caption: 'Weed', click: 'weeding'},
+	{img: 'assets/mulch.png', caption: 'Mulch', click: 'mulching'},
+	{img: 'assets/fertilizer.png', caption: 'Fertilize', click: 'fertilize'},
 ];
 
 var currentTool = -1;
@@ -74,6 +79,29 @@ function init(){
 
 	generateBoard();
 
+	var cornTextures = [
+		"url(assets/corn0.png)",
+		"url(assets/corn1.png)",
+		"url(assets/corn2.png)",
+		"url(assets/corn3.png)",
+		"url(assets/corn4.png)",
+		"url(assets/corn5.png)",
+	];
+	var cornThresholds = [
+		0.0, 0.25, 0.50, 0.75, 1.0, 2.0
+	];
+	var potatoTextures = [
+		"url(assets/potato0.png)",
+		"url(assets/potato1.png)",
+		"url(assets/potato2.png)",
+		"url(assets/potato3.png)",
+		"url(assets/potato4.png)",
+		"url(assets/potato5.png)",
+	];
+	var potatoThresholds = [
+		0.0, 0.25, 0.50, 0.75, 1.0, 2.0
+	];
+
 	game.onUpdateCell = function(cell,x,y){
 		if(cell.elem === undefined){
 			cell.elem = elemAt(x,y);
@@ -99,6 +127,39 @@ function init(){
 			else if(cell.weedsSprite !== undefined){
 				cell.elem.removeChild(cell.weedsSprite);
 				cell.weedsSprite = undefined;
+			}
+
+			var cornIndex = 0;
+			var textures = cornTextures;
+			var thresholds = cornThresholds;
+			if(cell.crop){
+				if(cell.crop.type === "Potato"){
+					textures = potatoTextures;
+					thresholds = potatoThresholds;
+				}
+				for(; cornIndex < textures.length; cornIndex++){
+					if(cell.crop.amount < thresholds[cornIndex])
+						break;
+				}
+			}
+
+			if(0 < cornIndex){
+				if(cell.cornSprite === undefined){
+					var cornSprite = document.createElement('div');
+					cornSprite.style.width = '32px';
+					cornSprite.style.height = '32px';
+					cornSprite.style.backgroundImage = textures[cornIndex - 1];
+
+					cornSprite.style.zIndex = 1;
+					cell.elem.appendChild(cornSprite);
+					cell.cornSprite = cornSprite;
+				}
+				else
+					cell.cornSprite.style.backgroundImage = textures[cornIndex - 1];
+			}
+			else if(cell.cornSprite !== undefined){
+				cell.elem.removeChild(cell.cornSprite);
+				cell.cornSprite = undefined;
 			}
 
 			cell.elem.style.backgroundImage = cell.plowed ? 'url(assets/ridge.png)' : 'url(assets/dirt.png)';
@@ -168,8 +229,6 @@ function createElements(){
 	outerContainer.appendChild(container);
 	if(cursorElem)
 		cursorElem = null;
-	if(toolCursorElem)
-		toolCursorElem = null;
 
 	table = document.createElement("div");
 	table.style.borderStyle = 'solid';
@@ -219,33 +278,22 @@ function createElements(){
 	}
 
 
-	var toolBarMargin = 4;
+	var toolBarMargin = 6;
+	var toolButtonBorder = 4;
 
 	function selectTool(idx){
 		// Selecting the same tool twice means deselecting
 		if(currentTool === idx)
 			idx = -1;
-		for(var i = 0; i < toolElems.length; i++)
+		for(var i = 0; i < toolElems.length; i++){
 			toolElems[i].style.backgroundColor = '#7f7fff';
-		if(0 <= idx && idx < toolElems.length)
-			toolElems[idx].style.backgroundColor = '#00ffff';
-		currentTool = idx;
-		if(0 <= currentTool){
-			if(!toolCursorElem){
-				toolCursorElem = document.createElement('div');
-				toolCursorElem.style.border = '2px blue solid';
-				toolCursorElem.style.pointerEvents = 'none';
-				toolBarElem.appendChild(toolCursorElem);
-			}
-			toolCursorElem.style.position = 'absolute';
-			toolCursorElem.style.top = (currentTool * (tilesize + toolBarMargin * 2) + toolBarMargin) + 'px';
-			toolCursorElem.style.left = (toolBarMargin) + 'px';
-			toolCursorElem.style.width = '126px';
-			toolCursorElem.style.height = '30px';
-			toolCursorElem.style.display = 'block';
+			toolElems[i].style.border = 'outset 4px #7f7f7f';
 		}
-		else if(toolCursorElem)
-			toolCursorElem.style.display = 'none';
+		if(0 <= idx && idx < toolElems.length){
+			toolElems[idx].style.backgroundColor = '#00ffff';
+			toolElems[idx].style.border = 'outset 4px #ff0000';
+		}
+		currentTool = idx;
 	}
 
 	// Reset the state before initializing toolbar elements
@@ -255,6 +303,7 @@ function createElements(){
 
 	// Tool bar
 	toolBarElem = document.createElement('div');
+	toolBarElem.setAttribute('class', 'noselect');
 	toolBarElem.style.borderStyle = 'solid';
 	toolBarElem.style.borderWidth = '1px';
 	toolBarElem.style.borderColor = 'red';
@@ -262,8 +311,8 @@ function createElements(){
 	//toolBarElem.margin = toolBarMargin + 'px';
 	toolBarElem.style.top = '0px';
 	toolBarElem.style.left = (viewPortWidth * tilesize + 20) + 'px';
-	toolBarElem.style.width = (128 + toolBarMargin * 2 + 2) + 'px';
-	toolBarElem.style.height = ((toolDefs.length) * (tilesize + toolBarMargin * 2) + 2) + 'px';
+	toolBarElem.style.width = (128 + toolBarMargin * 2 + toolButtonBorder * 2) + 'px';
+	toolBarElem.style.height = ((toolDefs.length) * (tilesize + toolBarMargin * 2) + toolButtonBorder * 2) + 'px';
 	container.appendChild(toolBarElem);
 	for(var i = 0; i < toolDefs.length; i++){
 		var toolElem = document.createElement('div');
@@ -272,7 +321,7 @@ function createElements(){
 		toolElem.style.height = '32px';
 		toolElem.style.left = toolBarMargin + 'px';
 		toolElem.style.top = (i * (tilesize + toolBarMargin * 2) + toolBarMargin) + 'px';
-		toolElem.style.border = '1px solid red';
+		toolElem.style.border = 'outset 4px #7f7f7f';
 		toolElem.style.backgroundColor = '#7f7fff';
 		toolElem.style.textAlign = 'middle';
 
