@@ -143,6 +143,7 @@ function init(){
 			if(0 < weedsIndex){
 				if(cell.weedsSprite === undefined){
 					var weedsSprite = document.createElement('div');
+					weedsSprite.style.position = 'absolute';
 					weedsSprite.style.width = '32px';
 					weedsSprite.style.height = '32px';
 					weedsSprite.style.backgroundImage = weedsTextures[weedsIndex - 1];
@@ -157,6 +158,27 @@ function init(){
 				cell.weedsSprite = undefined;
 			}
 
+			// Mulching sheet sprite
+			if(cell.mulch){
+				if(cell.mulchSprite === undefined){
+					var mulchSprite = document.createElement('div');
+					mulchSprite.style.position = 'absolute';
+					mulchSprite.style.width = '32px';
+					mulchSprite.style.height = '32px';
+					mulchSprite.style.backgroundImage = 'url(assets/mulch.png)';
+					mulchSprite.style.zIndex = 1;
+					cell.elem.appendChild(mulchSprite);
+					cell.mulchSprite = mulchSprite;
+				}
+				else
+					cell.mulchSprite.style.display = cell.mulch ? 'block' : 'none';
+			}
+			else if(cell.mulchSprite !== undefined){
+				cell.elem.removeChild(cell.mulchSprite);
+				cell.mulchSprite = undefined;
+			}
+
+			// Crop layer sprite
 			var cornIndex = 0;
 			var textures = cornTextures;
 			var thresholds = cornThresholds;
@@ -174,11 +196,13 @@ function init(){
 			if(0 < cornIndex){
 				if(cell.cornSprite === undefined){
 					var cornSprite = document.createElement('div');
+					cornSprite.style.position = 'absolute';
 					cornSprite.style.width = '32px';
 					cornSprite.style.height = '32px';
 					cornSprite.style.backgroundImage = textures[cornIndex - 1];
 
-					cornSprite.style.zIndex = 1;
+					// We do not want mulch sheet graphics drawn over crops, so we set z-index styles accordingly.
+					cornSprite.style.zIndex = 2;
 					cell.elem.appendChild(cornSprite);
 					cell.cornSprite = cornSprite;
 				}
@@ -328,6 +352,7 @@ function createElements(){
 	pauseOverlay.setAttribute('class', 'noselect');
 	pauseOverlay.style.display = 'none';
 	pauseOverlay.style.position = 'absolute';
+	pauseOverlay.style.zIndex = 100; // Some very high value, because we don't want crops to be dawn on top of pause overlay.
 	pauseOverlay.style.pointerEvents = 'none';
 	pauseOverlay.style.left = '0px';
 	pauseOverlay.style.top = '0px';
