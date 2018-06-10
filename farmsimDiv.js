@@ -20,9 +20,12 @@ var width;
 var height;
 var cursorElem;
 var infoElem;
+var pauseOverlay;
 
 var toolBarElem;
 var toolElems = [];
+var controlBarElem;
+var controlElems = [];
 
 var gstatusText;
 var gstatusWPBar;
@@ -238,13 +241,21 @@ function createElements(){
 	if(cursorElem)
 		cursorElem = null;
 
+	var toolBarMargin = 6;
+	var toolButtonBorder = 4;
+
+	const tableWidth = (viewPortWidth * tilesize);
+	const toolbarWidth = (128 + toolBarMargin * 2 + toolButtonBorder * 2);
+	const totalWidth = tableWidth + toolbarWidth;
+
 	table = document.createElement("div");
 	table.style.borderStyle = 'solid';
 	table.style.borderWidth = '1px';
 	table.style.borderColor = 'red';
 	table.style.position = 'relative';
-//	table.style.left = '50%';
-	table.style.width = (viewPortWidth * tilesize) + 'px';
+	table.style.left = '50%';
+	table.style.marginLeft = -(totalWidth) / 2 + 'px';
+	table.style.width = tableWidth + 'px';
 	table.style.height = (viewPortHeight * tilesize) + 'px';
 
 /*	messageElem = document.createElement('div');
@@ -253,6 +264,33 @@ function createElements(){
 	messageElem.style.fontSize = '20pt';
 	messageElem.style.position = 'relative';
 	messageElem.style.color = 'red';*/
+
+	// Control bar (Horizontal toolbar at the top of the screen)
+	controlBarElem = document.createElement('div');
+	controlBarElem.style.borderStyle = 'none';
+	controlBarElem.style.borderWidth = '1px';
+	controlBarElem.style.borderColor = 'red';
+	controlBarElem.style.backgroundColor = 'rgb(127,127,127)';
+	controlBarElem.style.position = 'relative';
+	controlBarElem.margin = '3px';
+	controlBarElem.style.left = '50%';
+	controlBarElem.style.marginLeft = (-totalWidth + tableWidth) / 2 + 'px';
+	controlBarElem.style.paddingLeft = '4px';
+	controlBarElem.style.width = ((controlElems.length + 1) * tilesize + 8) + 'px';
+	controlBarElem.style.height = (tilesize + 8) + 'px';
+	container.appendChild(controlBarElem);
+	var pauseButton = document.createElement('div');
+	pauseButton.style.width = '31px';
+	pauseButton.style.height = '31px';
+	pauseButton.style.position = 'relative';
+	pauseButton.style.top = '4px';
+	pauseButton.style.left = (32.0 * i + 4) + 'px';
+	pauseButton.style.border = '1px blue solid';
+	pauseButton.style.backgroundImage = 'url("assets/pause.png")';
+	pauseButton.onmousedown = function(e){
+		game.pause();
+	}
+	controlBarElem.appendChild(pauseButton);
 
 	container.appendChild(table);
 	for(var iy = 0; iy < viewPortHeight; iy++){
@@ -285,9 +323,31 @@ function createElements(){
 		}
 	}
 
-
-	var toolBarMargin = 6;
-	var toolButtonBorder = 4;
+	pauseOverlay = document.createElement("div");
+	pauseOverlay.setAttribute('name', 'pauseOverlay');
+	pauseOverlay.setAttribute('class', 'noselect');
+	pauseOverlay.style.display = 'none';
+	pauseOverlay.style.position = 'absolute';
+	pauseOverlay.style.pointerEvents = 'none';
+	pauseOverlay.style.left = '0px';
+	pauseOverlay.style.top = '0px';
+	pauseOverlay.style.width = table.style.width;
+	pauseOverlay.style.height = table.style.height;
+	pauseOverlay.style.backgroundColor = 'rgba(63,63,63,0.3)';
+	for(var i = 0; i < 2; i++){
+		pauseOverlay.appendChild((function (left){
+			var elem = document.createElement("div");
+			elem.style.position = 'absolute';
+			elem.style.left = (viewPortWidth * tilesize) * (left / 16) + 'px';
+			elem.style.top = (viewPortHeight * tilesize) * (1 / 4) + 'px';
+			elem.style.width = (viewPortWidth * tilesize) * (1 / 8) + 'px';
+			elem.style.height = (viewPortHeight * tilesize) * (1 / 2) + 'px';
+			elem.style.backgroundColor = 'rgba(0,0,0,0.5)';
+			return elem;
+		})([5,9][i]));
+	}
+	table.appendChild(pauseOverlay);
+	game.onPausedChange = (function(paused){pauseOverlay.style.display = paused ? 'block' : 'none'});
 
 	function selectTool(idx){
 		// Selecting the same tool twice means deselecting
@@ -318,8 +378,9 @@ function createElements(){
 	toolBarElem.style.position = 'absolute';
 	//toolBarElem.margin = toolBarMargin + 'px';
 	toolBarElem.style.top = '0px';
-	toolBarElem.style.left = (viewPortWidth * tilesize + 20) + 'px';
-	toolBarElem.style.width = (128 + toolBarMargin * 2 + toolButtonBorder * 2) + 'px';
+	toolBarElem.style.left = '50%';
+	toolBarElem.style.marginLeft = (-totalWidth / 2 + tableWidth + toolBarMargin) +  'px';
+	toolBarElem.style.width = toolbarWidth + 'px';
 	toolBarElem.style.height = ((toolDefs.length) * (tilesize + toolBarMargin * 2) + toolButtonBorder * 2) + 'px';
 	container.appendChild(toolBarElem);
 	for(var i = 0; i < toolDefs.length; i++){
@@ -360,7 +421,8 @@ function createElements(){
 	infoElem.style.border = '1px solid #00f';
 	infoElem.style.padding = '2px';
 	infoElem.style.position = 'absolute';
-	infoElem.style.left = '0px';
+	infoElem.style.left = '50%';
+	infoElem.style.marginLeft = (-totalWidth / 2) + 'px';
 	infoElem.style.top = '0px';
 	infoElem.style.width = '256px';
 	infoElem.style.height = '12em';
@@ -373,7 +435,8 @@ function createElements(){
 	gstatusPanel.style.border = '1px solid #00f';
 	gstatusPanel.style.padding = '2px';
 	gstatusPanel.style.position = 'absolute';
-	gstatusPanel.style.left = '268px';
+	gstatusPanel.style.left = '50%';
+	gstatusPanel.style.marginLeft = (-totalWidth / 2 + 268) + 'px';
 	gstatusPanel.style.top = '0px';
 	gstatusPanel.style.width = '120px';
 	gstatusPanel.style.height = '75px';

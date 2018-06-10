@@ -12,10 +12,16 @@ function FarmGame(xs,ys){
 	this.time = 0;
 	this.frameCount = 0;
 	this.autosave_frame = 0;
+	this.paused = false;
+	this.onPausedChange = null;
 }
 
-FarmGame.Cell = function(weeds){
+/// An object representing state of a tile in the garden.
+FarmGame.Cell = function(game, weeds, x, y){
+	this.game = game; // We should keep a pointer to the game world, although it costs a pointer in memory.
 	this.weeds = weeds;
+	this.x = x; // Redundant information for optimization
+	this.y = y; // Redundant information for optimization
 	this.weedRoots = 0.5;
 	this.plowed = false;
 	this.crop = null;
@@ -218,7 +224,7 @@ FarmGame.prototype.init = function(){
 			var row = [];
 			for(var y = 0; y < this.ys; y++){
 				var weeds = this.rng.next();
-				var cell = new FarmGame.Cell(weeds);
+				var cell = new FarmGame.Cell(this, weeds, x, y);
 
 				this.onUpdateCell(cell,x,y);
 
@@ -232,6 +238,9 @@ FarmGame.prototype.init = function(){
 FarmGame.prototype.onUpdateCell = function(cell,x,y){}
 
 FarmGame.prototype.update = function(deltaTime){
+	if(this.paused){
+		return;
+	}
 	var frameTime = 100; // Frame time interval in milliseconds
 	this.time += deltaTime;
 
@@ -397,7 +406,7 @@ FarmGame.prototype.deserialize = function(stream){
 				var c = cells[x][y];
 				if(!c)
 					continue;
-				var cell = new FarmGame.Cell(c.weeds);
+				var cell = new FarmGame.Cell(this, c.weeds, x, y);
 				cell.deserialize(c);
 				row.push(cell);
 				this.onUpdateCell(cell,x,y);
@@ -410,7 +419,7 @@ FarmGame.prototype.deserialize = function(stream){
 			var row = [];
 			for(var y = 0; y < this.ys; y++){
 				var weeds = this.rng.next();
-				var cell = new FarmGame.Cell(weeds);
+				var cell = new FarmGame.Cell(this, weeds, x, y);
 
 				this.onUpdateCell(cell,x,y);
 
@@ -430,6 +439,7 @@ FarmGame.prototype.plow = function(cell){
 		return false; // Give up due to low working power
 	if(cell.plow()){
 		this.workingPower -= workCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -448,6 +458,7 @@ FarmGame.prototype.seed = function(cell){
 	if(cell.seed()){
 		this.workingPower -= workCost;
 		this.cash -= moneyCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -467,6 +478,7 @@ FarmGame.prototype.seedTuber = function(cell){
 	if(cell.seedTuber()){
 		this.workingPower -= workCost;
 		this.cash -= moneyCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -487,6 +499,7 @@ FarmGame.prototype.harvest = function(cell){
 		this.cash += cell.crop.eval();
 		cell.crop = null;
 		cell.mulch = 0; // Harvesting discards mulch sheets
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -503,6 +516,7 @@ FarmGame.prototype.water = function(cell){
 		return false; // Give up due to low working power
 	if(cell.water()){
 		this.workingPower -= workCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -519,6 +533,7 @@ FarmGame.prototype.weeding = function(cell){
 		return false; // Give up due to low working power
 	if(cell.weeding()){
 		this.workingPower -= workCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -538,6 +553,7 @@ FarmGame.prototype.mulching = function(cell){
 	if(cell.mulching()){
 		this.workingPower -= workCost;
 		this.cash -= moneyCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -558,6 +574,7 @@ FarmGame.prototype.fertilize = function(cell){
 	if(cell.fertilize()){
 		this.workingPower -= workCost;
 		this.cash -= moneyCost;
+		this.onUpdateCell(cell, cell.x, cell.y);
 		return true;
 	}
 	else
@@ -568,6 +585,12 @@ FarmGame.prototype.fertilize.description = function(){
 		+ "Helps crops grow") + "\n"
 		+ i18n.t("Working Power Cost") + ": 5\n"
 		+ i18n.t("Money Cost") + ": $2";
+}
+
+FarmGame.prototype.pause = function(){
+	this.paused = !this.paused;
+	if(this.onPausedChange)
+		this.onPausedChange(this.paused);
 }
 
 FarmGame.prototype.onAutoSave = function(str){
