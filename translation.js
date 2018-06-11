@@ -49,7 +49,8 @@ var resources = {
 			"growth" : "生育",
 			"quality" : "品質",
 			"value" : "販価",
-			"Humidity" : "湿度"
+			"Humidity" : "湿度",
+			"Pause" : "ポーズ"
 		},
 		buttonFont : {
 			"Corn" : "10px MS Gothic",

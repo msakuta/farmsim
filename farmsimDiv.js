@@ -20,6 +20,7 @@ var width;
 var height;
 var cursorElem;
 var infoElem;
+var tipElem; // Tooltip window
 var pauseOverlay;
 
 var toolBarElem;
@@ -265,12 +266,13 @@ function createElements(){
 	if(cursorElem)
 		cursorElem = null;
 
-	var toolBarMargin = 6;
-	var toolButtonBorder = 4;
+	const toolBarMargin = 6;
+	const toolButtonBorder = 4;
 
 	const tableWidth = (viewPortWidth * tilesize);
 	const toolbarWidth = (128 + toolBarMargin * 2 + toolButtonBorder * 2);
 	const totalWidth = tableWidth + toolbarWidth;
+	const controlBarWidth = (controlElems.length + 1) * tilesize + 8;
 
 	table = document.createElement("div");
 	table.style.borderStyle = 'solid';
@@ -298,9 +300,9 @@ function createElements(){
 	controlBarElem.style.position = 'relative';
 	controlBarElem.margin = '3px';
 	controlBarElem.style.left = '50%';
-	controlBarElem.style.marginLeft = (-totalWidth + tableWidth) / 2 + 'px';
+	controlBarElem.style.marginLeft = (-totalWidth + tableWidth - controlBarWidth) / 2 + 'px';
 	controlBarElem.style.paddingLeft = '4px';
-	controlBarElem.style.width = ((controlElems.length + 1) * tilesize + 8) + 'px';
+	controlBarElem.style.width = controlBarWidth + 'px';
 	controlBarElem.style.height = (tilesize + 8) + 'px';
 	container.appendChild(controlBarElem);
 	var pauseButton = document.createElement('div');
@@ -313,6 +315,16 @@ function createElements(){
 	pauseButton.style.backgroundImage = 'url("assets/pause.png")';
 	pauseButton.onmousedown = function(e){
 		game.pause();
+	}
+	pauseButton.onmouseover = function(e){
+		tipElem.innerHTML = i18n.t('Pause');
+		tipElem.style.display = 'block';
+		tipElem.style.width = '';
+		tipElem.style.top = (e.target.getBoundingClientRect().bottom + 4 - e.target.parentElement.getBoundingClientRect().top) + 'px';
+		tipElem.style.marginLeft = (-totalWidth / 2 + tableWidth / 2 - tipElem.getBoundingClientRect().width / 2) + 'px';
+	};
+	pauseButton.onmouseleave = function(e){
+		tipElem.style.display = 'none';
 	}
 	controlBarElem.appendChild(pauseButton);
 
@@ -420,9 +432,11 @@ function createElements(){
 		toolElem.style.textAlign = 'middle';
 
 		var toolIcon = document.createElement('img');
+		toolIcon.style.pointerEvents = 'none';
 		toolIcon.src = toolDefs[i].img;
 		toolElem.appendChild(toolIcon);
 		var toolCaption = document.createElement('span');
+		toolCaption.style.pointerEvents = 'none';
 		toolCaption.innerHTML = toolDefs[i].caption;
 		toolCaption.setAttribute('class', 'noselect');
 		toolElem.appendChild(toolCaption);
@@ -430,6 +444,26 @@ function createElements(){
 		toolElem.onclick = function(e){
 			selectTool(toolElems.indexOf(this));
 		};
+
+		toolElem.onmouseover = function(e){
+			var i = toolElems.indexOf(e.target);
+			if(0 <= i && i < toolDefs.length){
+				var methodName = toolDefs[i].click;
+				if(methodName in game){
+					tipElem.innerHTML = game[methodName].description();
+					tipElem.style.display = 'block';
+					tipElem.style.width = '';
+					tipElem.style.top = (e.target.getBoundingClientRect().top - e.target.parentElement.getBoundingClientRect().top) + 'px';
+					tipElem.style.marginLeft = (totalWidth / 2 - toolbarWidth - tipElem.getBoundingClientRect().width) + 'px';
+					return;
+				}
+			}
+			tipElem.style.display = 'none';
+		};
+
+		toolElem.onmouseleave = function(e){
+			tipElem.style.display = 'none';
+		}
 
 		toolBarElem.appendChild(toolElem);
 		toolElems.push(toolElem);
@@ -506,6 +540,26 @@ function createElements(){
 	gstatusPanel.style.width = '256px';
 	gstatusPanel.style.height = '12em';
 	bottomPanel.appendChild(gstatusPanel);
+
+	// Tool tip window
+	tipElem = document.createElement('div');
+	tipElem.style.display = 'none';
+	tipElem.style.position = 'absolute';
+	tipElem.style.pointerEvents = 'none';
+	tipElem.style.left = '50%';
+	tipElem.style.top = '0px';
+	tipElem.style.width = '250px';
+	tipElem.style.marginLeft = (totalWidth / 2 - toolbarWidth - 250) + 'px';
+	tipElem.style.textAlign = 'left';
+	tipElem.style.border = 'solid 1px #0000ff';
+	tipElem.style.backgroundColor = 'rgba(215,215,191,0.75)';
+	tipElem.style.boxShadow = '4px 4px 6px rgba(0,0,0,0.75)';
+	tipElem.style.borderRadius = '4px';
+	tipElem.style.padding = '4px';	
+	tipElem.style.fontSize = '85%';
+	tipElem.style.whiteSpace = 'pre';
+	tipElem.style.zIndex = 200; // Should be on top of everything else
+	container.appendChild(tipElem);
 }
 
 function selectTile(sel){
