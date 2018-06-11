@@ -220,7 +220,7 @@ function init(){
 			const barMargin = 2;
 			const barWidth = tilesize - barMargin * 2;
 			const barHeight = 4;
-			if(overlayMode === 'growth' ? cell.crop : overlayMode === 'fertility' ? 0 < cell.fertility : overlayMode === 'weed' ? 0 < cell.weeds : false){
+			if(overlayMode !== null && 0 < overlayMode(cell)){
 				var outerBarElem, innerBarElem;
 				if(cell.outerBarElem === undefined){
 					outerBarElem = document.createElement('div');
@@ -242,7 +242,7 @@ function init(){
 					outerBarElem = cell.outerBarElem;
 					innerBarElem = cell.innerBarElem;
 				}
-				var f = overlayMode === 'fertility' ? cell.fertility : overlayMode === 'weed' ? cell.weeds : cell.crop.amount;
+				var f = overlayMode(cell);
 				if(f < 1.){
 					outerBarElem.style.backgroundColor = '#ff0000';
 					innerBarElem.style.backgroundColor = '#3faf3f'; // The green bar indicates the growth percentage where 100% is merchandizable.
@@ -392,21 +392,42 @@ function createElements(){
 	}, function(e){
 		this.style.borderStyle = game.paused ? 'inset' : 'groove';
 	}, "Pause");
+
+	function growthCallback(cell){
+		return cell.crop && cell.crop.amount;
+	}
 	addControlButton('url("assets/potato4.png")', function(e){
-		overlayMode = overlayMode !== 'growth' ? 'growth' : null;
+		overlayMode = overlayMode !== growthCallback ? growthCallback : null;
 	}, function(e){
-		this.style.borderStyle = overlayMode === 'growth' ? 'inset' : 'groove';
+		this.style.borderStyle = overlayMode === growthCallback ? 'inset' : 'groove';
 	}, "Show Crop Growth");
+
+	function fertilityCallback(cell){
+		return cell.fertility;
+	}
 	addControlButton('url("assets/fertilizer.png")', function(e){
-		overlayMode = overlayMode !== 'fertility' ? 'fertility' : null;
+		overlayMode = overlayMode !== fertilityCallback ? fertilityCallback : null;
 	}, function(e){
-		this.style.borderStyle = overlayMode === 'fertility' ? 'inset' : 'groove';
+		this.style.borderStyle = overlayMode === fertilityCallback ? 'inset' : 'groove';
 	}, "Show Fertility");
+
+	function weedCallback(cell){
+		return cell.weeds;
+	}
 	addControlButton('url("assets/weedGrass.png")', function(e){
-		overlayMode = overlayMode !== 'weed' ? 'weed' : null;
+		overlayMode = overlayMode !== weedCallback ? weedCallback : null;
 	}, function(e){
-		this.style.borderStyle = overlayMode === 'weed' ? 'inset' : 'groove';
+		this.style.borderStyle = overlayMode === weedCallback ? 'inset' : 'groove';
 	}, "Show Weed Density");
+
+	function waterCallback(cell){
+		return cell.humidity;
+	}
+	addControlButton('url("assets/water.png")', function(e){
+		overlayMode = overlayMode !== waterCallback ? waterCallback : null;
+	}, function(e){
+		this.style.borderStyle = overlayMode === waterCallback ? 'inset' : 'groove';
+	}, "Show Humidity");
 
 	container.appendChild(table);
 	for(var iy = 0; iy < viewPortHeight; iy++){
