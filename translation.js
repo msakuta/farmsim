@@ -51,7 +51,8 @@ var resources = {
 			"value" : "販価",
 			"Humidity" : "湿度",
 			"Pause" : "ポーズ",
-			"Show Crop Growth" : "作物生育度"
+			"Show Crop Growth" : "作物生育度",
+			"Show Fertility" : "肥沃度"
 		},
 		buttonFont : {
 			"Corn" : "10px MS Gothic",

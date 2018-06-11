@@ -22,7 +22,7 @@ var cursorElem;
 var infoElem;
 var tipElem; // Tooltip window
 var pauseOverlay;
-var growthBar = false;
+var overlayMode = null;
 
 var toolBarElem;
 var toolElems = [];
@@ -220,7 +220,7 @@ function init(){
 			const barMargin = 2;
 			const barWidth = tilesize - barMargin * 2;
 			const barHeight = 4;
-			if(growthBar && cell.crop){
+			if(overlayMode === 'growth' ? cell.crop : overlayMode === 'fertility' ? 0 < cell.fertility : false){
 				var outerBarElem, innerBarElem;
 				if(cell.outerBarElem === undefined){
 					outerBarElem = document.createElement('div');
@@ -242,11 +242,12 @@ function init(){
 					outerBarElem = cell.outerBarElem;
 					innerBarElem = cell.innerBarElem;
 				}
-				if(cell.crop.amount < 1.){
+				var f = overlayMode === 'fertility' ? cell.fertility : cell.crop.amount;
+				if(f < 1.){
 					outerBarElem.style.backgroundColor = '#ff0000';
 					innerBarElem.style.backgroundColor = '#3faf3f'; // The green bar indicates the growth percentage where 100% is merchandizable.
 				}
-				else if(cell.crop.amount < 2.){
+				else if(f < 2.){
 					outerBarElem.style.backgroundColor = '#3faf3f';
 					innerBarElem.style.backgroundColor = '#afaf3f'; // Indicate overgrowth of crops by weathered yellow
 				}
@@ -254,7 +255,7 @@ function init(){
 					outerBarElem.style.backgroundColor = '#afaf3f';
 					innerBarElem.style.backgroundColor = '#afaf3f'; // No point showing the difference in case of growth > 2.
 				}
-				innerBarElem.style.width = barWidth * (cell.crop.amount % 1.) + 'px';
+				innerBarElem.style.width = barWidth * (f % 1.) + 'px';
 			}
 			else if(cell.outerBarElem !== undefined){
 				cell.elem.removeChild(cell.outerBarElem);
@@ -353,7 +354,7 @@ function createElements(){
 	controlBarElem.style.width = controlBarWidth + 'px';
 	controlBarElem.style.height = (tilesize + 8) + 'px';
 	container.appendChild(controlBarElem);
-	function addControlButton(i, img, onclick, desc){
+	function addControlButton(img, onclick, updateState, desc){
 		var button = document.createElement('div');
 		button.style.width = '31px';
 		button.style.height = '31px';
@@ -363,7 +364,13 @@ function createElements(){
 		button.style.border = '2px #afafaf';
 		button.style.borderStyle = 'groove';
 		button.style.backgroundImage = img;
-		button.onmousedown = onclick;
+		button.updateState = updateState;
+		button.addEventListener('mousedown', onclick);
+		button.addEventListener('mousedown', function(e){
+			for(var i = 0; i < controlElems.length; i++){
+				controlElems[i].updateState(e);
+			}
+		});
 		button.onmouseover = function(e){
 			tipElem.innerHTML = i18n.t(desc);
 			tipElem.style.display = 'block';
@@ -380,14 +387,21 @@ function createElements(){
 		controlBarElem.style.marginLeft = (-totalWidth + tableWidth - controlBarWidth) / 2 + 'px';
 		controlElems.push(button);
 	}
-	addControlButton(0, 'url("assets/pause.png")', function(e){
+	addControlButton('url("assets/pause.png")', function(e){
 		game.pause();
-		e.target.style.borderStyle = game.paused ? 'inset' : 'groove';;
+	}, function(e){
+		this.style.borderStyle = game.paused ? 'inset' : 'groove';
 	}, "Pause");
-	addControlButton(1, 'url("assets/potato4.png")', function(e){
-		growthBar = !growthBar;
-		e.target.style.borderStyle = growthBar ? 'inset' : 'groove';
+	addControlButton('url("assets/potato4.png")', function(e){
+		overlayMode = overlayMode !== 'growth' ? 'growth' : null;
+	}, function(e){
+		this.style.borderStyle = overlayMode === 'growth' ? 'inset' : 'groove';
 	}, "Show Crop Growth");
+	addControlButton('url("assets/fertilizer.png")', function(e){
+		overlayMode = overlayMode !== 'fertility' ? 'fertility' : null;
+	}, function(e){
+		this.style.borderStyle = overlayMode === 'fertility' ? 'inset' : 'groove';
+	}, "Show Fertility");
 
 	container.appendChild(table);
 	for(var iy = 0; iy < viewPortHeight; iy++){
