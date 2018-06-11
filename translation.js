@@ -50,7 +50,8 @@ var resources = {
 			"quality" : "品質",
 			"value" : "販価",
 			"Humidity" : "湿度",
-			"Pause" : "ポーズ"
+			"Pause" : "ポーズ",
+			"Show Crop Growth" : "作物生育度"
 		},
 		buttonFont : {
 			"Corn" : "10px MS Gothic",

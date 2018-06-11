@@ -22,6 +22,7 @@ var cursorElem;
 var infoElem;
 var tipElem; // Tooltip window
 var pauseOverlay;
+var growthBar = false;
 
 var toolBarElem;
 var toolElems = [];
@@ -215,6 +216,52 @@ function init(){
 				cell.cornSprite = undefined;
 			}
 
+			// Growth bar
+			const barMargin = 2;
+			const barWidth = tilesize - barMargin * 2;
+			const barHeight = 4;
+			if(growthBar && cell.crop){
+				var outerBarElem, innerBarElem;
+				if(cell.outerBarElem === undefined){
+					outerBarElem = document.createElement('div');
+					outerBarElem.style.position = 'absolute';
+					outerBarElem.style.top = (tilesize - barHeight - barMargin) + 'px';
+					outerBarElem.style.left = barMargin + 'px';
+					outerBarElem.style.width = barWidth + 'px';
+					outerBarElem.style.height = barHeight + 'px';
+					outerBarElem.style.zIndex = 10;
+					innerBarElem = document.createElement('div');
+					innerBarElem.style.position = 'absolute';
+					innerBarElem.style.height = '100%';
+					outerBarElem.appendChild(innerBarElem);
+					cell.elem.appendChild(outerBarElem);
+					cell.outerBarElem = outerBarElem;
+					cell.innerBarElem = innerBarElem;
+				}
+				else{
+					outerBarElem = cell.outerBarElem;
+					innerBarElem = cell.innerBarElem;
+				}
+				if(cell.crop.amount < 1.){
+					outerBarElem.style.backgroundColor = '#ff0000';
+					innerBarElem.style.backgroundColor = '#3faf3f'; // The green bar indicates the growth percentage where 100% is merchandizable.
+				}
+				else if(cell.crop.amount < 2.){
+					outerBarElem.style.backgroundColor = '#3faf3f';
+					innerBarElem.style.backgroundColor = '#afaf3f'; // Indicate overgrowth of crops by weathered yellow
+				}
+				else{
+					outerBarElem.style.backgroundColor = '#afaf3f';
+					innerBarElem.style.backgroundColor = '#afaf3f'; // No point showing the difference in case of growth > 2.
+				}
+				innerBarElem.style.width = barWidth * (cell.crop.amount % 1.) + 'px';
+			}
+			else if(cell.outerBarElem !== undefined){
+				cell.elem.removeChild(cell.outerBarElem);
+				cell.outerBarElem = undefined;
+				cell.innerBarElem = undefined;
+			}
+
 			cell.elem.style.backgroundImage = cell.plowed ? 'url(assets/ridge.png)' : 'url(assets/dirt.png)';
 		}
 	};
@@ -272,7 +319,8 @@ function createElements(){
 	const tableWidth = (viewPortWidth * tilesize);
 	const toolbarWidth = (128 + toolBarMargin * 2 + toolButtonBorder * 2);
 	const totalWidth = tableWidth + toolbarWidth;
-	const controlBarWidth = (controlElems.length + 1) * tilesize + 8;
+	const controlButtonSize = 34; // includes the border which can have button-ish effect
+	var controlBarWidth = (controlElems.length + 1) * controlButtonSize + 8;
 
 	table = document.createElement("div");
 	table.style.borderStyle = 'solid';
@@ -305,28 +353,41 @@ function createElements(){
 	controlBarElem.style.width = controlBarWidth + 'px';
 	controlBarElem.style.height = (tilesize + 8) + 'px';
 	container.appendChild(controlBarElem);
-	var pauseButton = document.createElement('div');
-	pauseButton.style.width = '31px';
-	pauseButton.style.height = '31px';
-	pauseButton.style.position = 'relative';
-	pauseButton.style.top = '4px';
-	pauseButton.style.left = (32.0 * i + 4) + 'px';
-	pauseButton.style.border = '1px blue solid';
-	pauseButton.style.backgroundImage = 'url("assets/pause.png")';
-	pauseButton.onmousedown = function(e){
+	function addControlButton(i, img, onclick, desc){
+		var button = document.createElement('div');
+		button.style.width = '31px';
+		button.style.height = '31px';
+		button.style.position = 'absolute';
+		button.style.top = '4px';
+		button.style.left = (controlButtonSize * controlElems.length + 4) + 'px';
+		button.style.border = '2px #afafaf';
+		button.style.borderStyle = 'groove';
+		button.style.backgroundImage = img;
+		button.onmousedown = onclick;
+		button.onmouseover = function(e){
+			tipElem.innerHTML = i18n.t(desc);
+			tipElem.style.display = 'block';
+			tipElem.style.width = '';
+			tipElem.style.top = (e.target.getBoundingClientRect().bottom + 4 - e.target.parentElement.getBoundingClientRect().top) + 'px';
+			tipElem.style.marginLeft = (-totalWidth / 2 + tableWidth / 2 - tipElem.getBoundingClientRect().width / 2) + 'px';
+		};
+		button.onmouseleave = function(e){
+			tipElem.style.display = 'none';
+		}
+		controlBarElem.appendChild(button);
+		controlBarWidth = (controlElems.length + 1) * controlButtonSize + 8;
+		controlBarElem.style.width = controlBarWidth + 'px';
+		controlBarElem.style.marginLeft = (-totalWidth + tableWidth - controlBarWidth) / 2 + 'px';
+		controlElems.push(button);
+	}
+	addControlButton(0, 'url("assets/pause.png")', function(e){
 		game.pause();
-	}
-	pauseButton.onmouseover = function(e){
-		tipElem.innerHTML = i18n.t('Pause');
-		tipElem.style.display = 'block';
-		tipElem.style.width = '';
-		tipElem.style.top = (e.target.getBoundingClientRect().bottom + 4 - e.target.parentElement.getBoundingClientRect().top) + 'px';
-		tipElem.style.marginLeft = (-totalWidth / 2 + tableWidth / 2 - tipElem.getBoundingClientRect().width / 2) + 'px';
-	};
-	pauseButton.onmouseleave = function(e){
-		tipElem.style.display = 'none';
-	}
-	controlBarElem.appendChild(pauseButton);
+		e.target.style.borderStyle = game.paused ? 'inset' : 'groove';;
+	}, "Pause");
+	addControlButton(1, 'url("assets/potato4.png")', function(e){
+		growthBar = !growthBar;
+		e.target.style.borderStyle = growthBar ? 'inset' : 'groove';
+	}, "Show Crop Growth");
 
 	container.appendChild(table);
 	for(var iy = 0; iy < viewPortHeight; iy++){
