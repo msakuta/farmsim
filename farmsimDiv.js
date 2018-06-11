@@ -220,7 +220,7 @@ function init(){
 			const barMargin = 2;
 			const barWidth = tilesize - barMargin * 2;
 			const barHeight = 4;
-			if(overlayMode === 'growth' ? cell.crop : overlayMode === 'fertility' ? 0 < cell.fertility : false){
+			if(overlayMode === 'growth' ? cell.crop : overlayMode === 'fertility' ? 0 < cell.fertility : overlayMode === 'weed' ? 0 < cell.weeds : false){
 				var outerBarElem, innerBarElem;
 				if(cell.outerBarElem === undefined){
 					outerBarElem = document.createElement('div');
@@ -242,7 +242,7 @@ function init(){
 					outerBarElem = cell.outerBarElem;
 					innerBarElem = cell.innerBarElem;
 				}
-				var f = overlayMode === 'fertility' ? cell.fertility : cell.crop.amount;
+				var f = overlayMode === 'fertility' ? cell.fertility : overlayMode === 'weed' ? cell.weeds : cell.crop.amount;
 				if(f < 1.){
 					outerBarElem.style.backgroundColor = '#ff0000';
 					innerBarElem.style.backgroundColor = '#3faf3f'; // The green bar indicates the growth percentage where 100% is merchandizable.
@@ -402,6 +402,11 @@ function createElements(){
 	}, function(e){
 		this.style.borderStyle = overlayMode === 'fertility' ? 'inset' : 'groove';
 	}, "Show Fertility");
+	addControlButton('url("assets/weedGrass.png")', function(e){
+		overlayMode = overlayMode !== 'weed' ? 'weed' : null;
+	}, function(e){
+		this.style.borderStyle = overlayMode === 'weed' ? 'inset' : 'groove';
+	}, "Show Weed Density");
 
 	container.appendChild(table);
 	for(var iy = 0; iy < viewPortHeight; iy++){
