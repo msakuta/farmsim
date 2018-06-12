@@ -429,6 +429,15 @@ function createElements(){
 		this.style.borderStyle = overlayMode === waterCallback ? 'inset' : 'groove';
 	}, "Show Humidity");
 
+	function potatoPestCallback(cell){
+		return cell.potatoPest;
+	}
+	addControlButton('url("assets/potatoSeed.png")', function(e){
+		overlayMode = overlayMode !== potatoPestCallback ? potatoPestCallback : null;
+	}, function(e){
+		this.style.borderStyle = overlayMode === potatoPestCallback ? 'inset' : 'groove';
+	}, "Show Potato Pest Level");
+
 	container.appendChild(table);
 	for(var iy = 0; iy < viewPortHeight; iy++){
 		for(var ix = 0; ix < viewPortWidth; ix++){
