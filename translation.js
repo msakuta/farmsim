@@ -55,7 +55,10 @@ var resources = {
 			"Show Fertility" : "肥沃度",
 			"Show Weed Density" : "雑草密度",
 			"Show Humidity" : "湿度",
-			"Show Potato Pest Level" : "イモ連作障害度"
+			"Show Potato Pest Level" : "イモ連作障害度",
+			"Date" : "日付",
+			"age" : "経過時間",
+			"days" : "日"
 		},
 		buttonFont : {
 			"Corn" : "10px MS Gothic",

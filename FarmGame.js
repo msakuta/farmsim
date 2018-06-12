@@ -16,6 +16,9 @@ function FarmGame(xs,ys){
 	this.onPausedChange = null;
 }
 
+/// The default days per frame constant. It's based on the experience of average crop growth rate.
+FarmGame.prototype.daysPerFrame = 0.02;
+
 /// An object representing state of a tile in the garden.
 FarmGame.Cell = function(game, weeds, x, y){
 	this.game = game; // We should keep a pointer to the game world, although it costs a pointer in memory.
@@ -70,7 +73,7 @@ FarmGame.Cell.prototype.plow = function(){
 }
 FarmGame.Cell.prototype.seed = function(){
 	if(this.plowed && !this.crop){
-		this.crop = new FarmGame.Corn;
+		this.crop = new FarmGame.Corn(this.game.frameCount);
 		return true;
 	}
 	else
@@ -78,7 +81,7 @@ FarmGame.Cell.prototype.seed = function(){
 }
 FarmGame.Cell.prototype.seedTuber = function(){
 	if(this.plowed && !this.crop){
-		this.crop = new FarmGame.Potato;
+		this.crop = new FarmGame.Potato(this.game.frameCount);
 		return true;
 	}
 	else
@@ -117,9 +120,10 @@ FarmGame.Cell.prototype.fertilize = function(){
 	return true;
 }
 
-FarmGame.Crop = function(){
+FarmGame.Crop = function(frameCount){
 	this.type = "";
 	this.amount = 0;
+	this.plantDate = frameCount;
 }
 
 FarmGame.Crop.prototype.serialize = function(){
@@ -128,6 +132,7 @@ FarmGame.Crop.prototype.serialize = function(){
 
 FarmGame.Crop.prototype.deserialize = function(data){
 	this.amount = data.amount;
+	this.plantDate = data.plantDate;
 }
 
 FarmGame.Crop.prototype.grow = function(cell,growth){

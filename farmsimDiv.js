@@ -29,6 +29,7 @@ var toolElems = [];
 var controlBarElem;
 var controlElems = [];
 
+var gstatusTime;
 var gstatusText;
 var gstatusWPBar;
 var gstatusCashText;
@@ -289,6 +290,9 @@ function init(){
 
 		updateInfo();
 
+		var days = Math.floor(game.frameCount) * game.daysPerFrame;
+		var date = new Date(days * 24 * 60 * 60 * 1000); // Starts with 1970-01-01
+		gstatusTime.innerHTML = i18n.t("Date") + ": " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
 		gstatusText.innerHTML = i18n.t("Working Power") + ": " + Math.floor(game.workingPower);
 		gstatusWPBar.style.width = (game.workingPower / 100) * statusBarWidth + 'px';
 		gstatusCashText.innerHTML = i18n.t("Cash") + ": $" + Math.floor(game.cash);
@@ -598,8 +602,9 @@ function createElements(){
 	infoElem.style.marginLeft = (-totalWidth / 2) + 'px';
 	infoElem.style.top = '0px';
 	infoElem.style.width = '256px';
-	infoElem.style.height = '12em';
+	infoElem.style.height = '14em';
 	infoElem.style.lineHeight = '120%';
+	infoElem.style.fontSize = '80%';
 	bottomPanel.appendChild(infoElem);
 
 	// The global status panel shows information about the player and other global things.
@@ -611,9 +616,13 @@ function createElements(){
 	gstatusPanel.style.left = '50%';
 	gstatusPanel.style.marginLeft = (-totalWidth / 2 + 268) + 'px';
 	gstatusPanel.style.top = '0px';
-	gstatusPanel.style.width = '120px';
-	gstatusPanel.style.height = '75px';
 	gstatusPanel.style.lineHeight = '120%';
+	gstatusPanel.style.fontSize = '80%';
+	gstatusTime = document.createElement('div');
+	gstatusTime.style.fontFamily = 'Sans-serif';
+	gstatusTime.style.left = '5px';
+	gstatusTime.style.top = '5px';
+	gstatusPanel.appendChild(gstatusTime);
 	gstatusText = document.createElement('div');
 	gstatusText.style.fontFamily = 'Sans-serif';
 	gstatusText.style.left = '5px';
@@ -652,7 +661,7 @@ function createElements(){
 		gstatusPanel.appendChild(sprite);
 	}
 	gstatusPanel.style.width = '256px';
-	gstatusPanel.style.height = '12em';
+	gstatusPanel.style.height = '14em';
 	bottomPanel.appendChild(gstatusPanel);
 
 	// Tool tip window
@@ -718,9 +727,10 @@ function updateInfo(){
 	var crop = '';
 	if(cell.crop){
 		crop =
-			(cell.crop.type) + " " + ("growth") + ": " + Math.floor(cell.crop.amount * 100) + "<br>" +
-			(cell.crop.type) + " " + ("quality") + ": " + Math.floor(cell.crop.getQuality() * 100) + "<br>" +
-			(cell.crop.type) + " " + ("value") + ": " + Math.floor(cell.crop.eval());
+			i18n.t(cell.crop.type) + " " + i18n.t("age") + ": " + Math.floor((game.frameCount - cell.crop.plantDate) * game.daysPerFrame) + " " + i18n.t("days") + "<br>" +
+			i18n.t(cell.crop.type) + " " + i18n.t("growth") + ": " + Math.floor(cell.crop.amount * 100) + " % <br>" +
+			i18n.t(cell.crop.type) + " " + i18n.t("quality") + ": " + Math.floor(cell.crop.getQuality() * 100) + " % <br>" +
+			i18n.t(cell.crop.type) + " " + i18n.t("value") + ": $" + Math.floor(cell.crop.eval());
 	}
 
 	infoElem.innerHTML = i18n.t("Pos") + ": " + selectedCoords[0] + ", " + selectedCoords[1] + "<br>" +
