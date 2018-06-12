@@ -51,11 +51,15 @@ var weedsTextures = [
 	"url(assets/weeds1.png)",
 	"url(assets/weeds2.png)",
 	"url(assets/weeds3.png)",
+	"url(assets/weeds4.png)",
+	"url(assets/weeds5.png)",
+	"url(assets/weeds6.png)",
+	"url(assets/weeds7.png)",
 ];
 
-var weedsThresholds = [
-	0.25, 0.50, 0.75
-];
+var weedsThresholds = [];
+for(var i = 0; i < weedsTextures.length; i++)
+	weedsThresholds.push((i + 1) / weedsTextures.length);
 
 var toolDefs = [
 	{img: 'assets/plow.png', caption: i18n.t('Plow'), click: 'plow'},
