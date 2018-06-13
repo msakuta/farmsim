@@ -11,6 +11,7 @@ var game;
 var container;
 var table;
 var tileElems;
+var rainElems = [];
 var scrollPos = [0, 0];
 var selectedTile = null;
 var selectedCoords = null;
@@ -292,14 +293,18 @@ function init(){
 
 		var days = Math.floor(game.frameCount) * game.daysPerFrame;
 		var date = new Date(days * 24 * 60 * 60 * 1000); // Starts with 1970-01-01
+		var rainLevel = Math.floor(game.weather * weatherIcons.length);
 		gstatusTime.innerHTML = i18n.t("Date") + ": " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
 		gstatusText.innerHTML = i18n.t("Working Power") + ": " + Math.floor(game.workingPower);
 		gstatusWPBar.style.width = (game.workingPower / 100) * statusBarWidth + 'px';
 		gstatusCashText.innerHTML = i18n.t("Cash") + ": $" + Math.floor(game.cash);
 		gstatusWeatherText.innerHTML = i18n.t("Weather") + ": (" + Math.floor(game.weather * 100) + ")<br>"
-			+ weatherIcons[Math.floor(game.weather * weatherIcons.length)].caption;
+			+ weatherIcons[rainLevel].caption;
 		for(var i = 0; i < weatherSprites.length; i++)
 			weatherSprites[i].style.display = i / weatherSprites.length <= game.weather && game.weather < (i+1) / weatherSprites.length ? 'block' : 'none';
+
+		for(var i = 0; i < rainElems.length; i++)
+			rainElems[i].style.display = game.rainThreshold < game.weather ? 'block' : 'none';
 
 		requestAnimationFrame(animate);
 	}
@@ -475,6 +480,26 @@ function createElements(){
 
 			table.appendChild(tileElem);
 		}
+	}
+
+	for(var i = 0; i < 2; i++){
+		var rainElem = document.createElement("div");
+		rainElem.setAttribute('class', 'noselect');
+		rainElem.style.display = 'none';
+		rainElem.style.position = 'absolute';
+		rainElem.style.zIndex = 50; // Some very high value, because we don't want crops to be dawn on top of pause overlay.
+		rainElem.style.pointerEvents = 'none';
+		rainElem.style.left = '0px';
+		rainElem.style.top = '0px';
+		rainElem.style.width = table.style.width;
+		rainElem.style.height = table.style.height;
+		rainElem.style.backgroundImage = 'url(assets/rain.png)';
+		rainElem.style.animation = i ? 'rain2' : 'rain';
+		rainElem.style.animationDuration = (0.7153 + i * 0.765) + 's';
+		rainElem.style.animationIterationCount = 'infinite';
+		rainElem.style.animationTimingFunction = 'linear';
+		table.appendChild(rainElem);
+		rainElems.push(rainElem);
 	}
 
 	pauseOverlay = document.createElement("div");

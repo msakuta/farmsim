@@ -19,6 +19,9 @@ function FarmGame(xs,ys){
 /// The default days per frame constant. It's based on the experience of average crop growth rate.
 FarmGame.prototype.daysPerFrame = 0.02;
 
+/// The threshold at which rain will start dripping.
+FarmGame.prototype.rainThreshold = 0.75;
+
 /// An object representing state of a tile in the garden.
 FarmGame.Cell = function(game, weeds, x, y){
 	this.game = game; // We should keep a pointer to the game world, although it costs a pointer in memory.
@@ -346,7 +349,7 @@ FarmGame.prototype.updateInternal = function(){
 
 			// Humidity of soil gradually disperse into the air.  Soil humidity gradually approaches air moisture.
 			// Mulching reduces evaporation of humidity.
-			cell.humidity += (0.75 < this.weather && cell.humidity < this.weather ? 10. * (1. - cell.humidity) : this.weather - cell.humidity) // Rain lifts up humidity rapidly.
+			cell.humidity += (this.rainThreshold < this.weather && cell.humidity < this.weather ? 10. * (1. - cell.humidity) : this.weather - cell.humidity) // Rain lifts up humidity rapidly.
 				* (0 < cell.mulch ? 0.0002 : 0.0010);
 
 			// Potato pest gradually decreases if there is no potato crop.
